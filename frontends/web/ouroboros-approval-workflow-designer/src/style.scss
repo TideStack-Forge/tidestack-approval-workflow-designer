@@ -1,0 +1,62 @@
+.workflow-top {
+  padding-bottom: 15px;
+  position: relative;
+  .workflow-top-left-container {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    flex-shrink: 1;
+    flex-grow: 1;
+  }
+  .workflow-tabs-container {
+    cursor: pointer;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    margin-left: -100px;
+    padding: 0;
+    height: 100%;
+    align-items: center;
+    display: flex;
+    border-bottom: solid 1px #dcdfe6;
+    .workflow-top-tab {
+      padding: 0 20px 25px;
+      display: block;
+      height: 100%;
+      border: transparent;
+      border-radius: 0;
+      &:hover,
+      &:focus,
+      &:visited,
+      &:active,
+      &:hover:active {
+        border: none;
+        border-bottom: solid 2px #2468f2;
+        color: #2468f2;
+      }
+    }
+    .tab-active {
+      border-bottom: solid 2px #2468f2;
+      color: #2468f2;
+    }
+  }
+  .workflow-top-operation-container {
+    padding: 0;
+    width: 200px;
+    text-align: right;
+    margin-left: auto;
+  }
+}
+.workflow-body-container {
+  padding: 0;
+  background-color: #f4f5f6;
+  position: relative;
+  height: 400px;
+  flex-shrink: 1;
+  flex-grow: 1;
+  .workflow-baseinfo {
+    background-color: #fff;
+    width: 700px;
+    margin: 80px auto 0;
+  }
+}

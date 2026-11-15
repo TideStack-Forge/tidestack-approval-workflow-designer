@@ -1,0 +1,19 @@
+{
+  "formatVersion": 2,
+  "id": "golden-scenario-1-single-branch",
+  "name": "XOR-普通节点条件分支",
+  "formType": "default",
+  "formKey": "purchase-form",
+  "nodes": [
+    { "id": "start-a", "type": "发起节点", "name": "发起" },
+    { "id": "approve-a", "type": "审批节点", "name": "主管审批", "subType": "单签", "candidates": [] },
+    { "id": "approve-b", "type": "审批节点", "name": "总监审批", "subType": "单签", "candidates": [] },
+    { "id": "end-a", "type": "EndNode", "name": "结束" }
+  ],
+  "edges": [
+    { "id": "e1", "type": "SEQUENCE", "sourceId": "start-a", "targetId": "approve-a", "condition": { "left": { "type": "field", "field": "amount" }, "op": "less_or_equal", "right": 1000 } },
+    { "id": "e2", "type": "SEQUENCE", "sourceId": "start-a", "targetId": "approve-b", "condition": { "left": { "type": "field", "field": "amount" }, "op": "greater", "right": 1000 } },
+    { "id": "e3", "type": "SEQUENCE", "sourceId": "approve-a", "targetId": "end-a" },
+    { "id": "e4", "type": "SEQUENCE", "sourceId": "approve-b", "targetId": "end-a" }
+  ]
+}

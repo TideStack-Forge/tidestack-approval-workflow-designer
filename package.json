@@ -1,0 +1,11 @@
+{
+  "name": "tidestack-approval-workflow-designer",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "install:dependencies": "npm ci --prefix frontends/web/ouroboros-sdk && npm ci --legacy-peer-deps --prefix frontends/web/ouroboros-approval-workflow-designer",
+    "build": "npm run build --prefix frontends/web/ouroboros-approval-workflow-designer",
+    "test": "npm run test:unit --prefix frontends/web/ouroboros-approval-workflow-designer",
+    "dev": "npm run dev --prefix frontends/web/ouroboros-approval-workflow-designer"
+  }
+}

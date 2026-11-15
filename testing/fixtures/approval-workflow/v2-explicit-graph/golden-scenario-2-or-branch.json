@@ -1,0 +1,28 @@
+{
+  "formatVersion": 2,
+  "id": "golden-scenario-2-or-branch",
+  "name": "OR-显式网关并发分支",
+  "formType": "default",
+  "formKey": "purchase-form",
+  "nodes": [
+    { "id": "start-b", "type": "发起节点", "name": "发起" },
+    { "id": "gateway-or-split-b", "type": "GatewayNode", "name": "并发分流", "splitType": "OR" },
+    { "id": "approve-c", "type": "审批节点", "name": "财务审批", "subType": "单签", "candidates": [] },
+    { "id": "approve-d", "type": "审批节点", "name": "法务审批", "subType": "单签", "candidates": [] },
+    { "id": "join-or", "type": "JoinNode", "name": "并发汇聚", "joinType": "OR" },
+    {
+      "id": "notice-b",
+      "type": "通知节点",
+      "name": "结果通知",
+      "notice": { "content": "done", "channel": ["message"], "candidates": [] }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "type": "SEQUENCE", "sourceId": "start-b", "targetId": "gateway-or-split-b" },
+    { "id": "e2", "type": "SEQUENCE", "sourceId": "gateway-or-split-b", "targetId": "approve-c" },
+    { "id": "e3", "type": "SEQUENCE", "sourceId": "gateway-or-split-b", "targetId": "approve-d" },
+    { "id": "e4", "type": "SEQUENCE", "sourceId": "approve-c", "targetId": "join-or" },
+    { "id": "e5", "type": "SEQUENCE", "sourceId": "approve-d", "targetId": "join-or" },
+    { "id": "e6", "type": "SEQUENCE", "sourceId": "join-or", "targetId": "notice-b" }
+  ]
+}

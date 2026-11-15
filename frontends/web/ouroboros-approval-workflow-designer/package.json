@@ -1,0 +1,84 @@
+{
+  "name": "workflow-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "webpack serve --config webpack.config.js --mode development",
+    "dev": "webpack serve --config webpack.config.js --mode development",
+    "start": "webpack serve --config webpack.config.js --mode development",
+    "build": "webpack --config webpack.config.js --mode production",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint --ext .js,.jsx src tests webpack.config.js playwright.config.js",
+    "test": "npm run test:all",
+    "test:unit": "vitest run",
+    "test:integration": "playwright test --config=playwright.config.js",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "zip": "node ./scripts/zip-package.cjs dist approval-workflow.zip",
+    "package": "npm run build && npm run zip",
+    "sync": "node ./scripts/sync-package.cjs",
+    "package:sync": "npm run package && npm run sync"
+  },
+  "dependencies": {
+    "@xyflow/react": "12.11.2",
+    "axios": "^1.18.1",
+    "core-js": "^3.49.0",
+    "lodash": "^4.18.1",
+    "ouroboros-sdk": "^1.6.0-beta.7",
+    "uuid": "^14.0.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/eslint-parser": "^7.29.7",
+    "@babel/plugin-transform-private-methods": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-react": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@babel/register": "^7.29.7",
+    "@fortawesome/fontawesome-free": "^6.4.0",
+    "@playwright/test": "^1.61.1",
+    "amis": "^6.13.0",
+    "amis-core": "^6.13.0",
+    "amis-ui": "^6.13.0",
+    "babel-loader": "^9.2.1",
+    "cross-zip": "^4.0.1",
+    "css-loader": "^7.1.2",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-react": "^7.37.5",
+    "html-webpack-plugin": "^5.6.7",
+    "jsdom": "^29.1.1",
+    "less": "^4.7.0",
+    "less-loader": "^11.0.0",
+    "mini-css-extract-plugin": "^2.10.2",
+    "picocolors": "^1.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sass": "^1.101.0",
+    "sass-loader": "^13.3.2",
+    "style-loader": "^3.3.3",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.10",
+    "webpack": "^5.108.4",
+    "webpack-cli": "^7.2.1",
+    "webpack-dev-server": "^6.0.0"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "@babel/eslint-parser"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ]
+}
