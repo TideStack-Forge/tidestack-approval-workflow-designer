@@ -15,7 +15,9 @@ export function createMockEnv(callbacks = {}) {
     if (!requestUrl) {
       return null
     }
-    const response = activeFetcherResponses[requestUrl]
+    const response =
+      activeFetcherResponses[requestUrl] ||
+      activeFetcherResponses[requestUrl.split('?')[0]]
     if (typeof response === 'function') {
       return response(request)
     }

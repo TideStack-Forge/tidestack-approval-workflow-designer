@@ -27,7 +27,10 @@ describe('ValidationEngine', () => {
   it('rejects invalid manual connections to condition nodes', () => {
     const engine = new ValidationEngine([
       createNode('start-1', 'start', { name: '发起节点' }),
-      createNode('condition-1', 'condition', { name: '条件节点', branchNodeId: 'branch-1' }),
+      createNode('condition-1', 'condition', {
+        name: '条件节点',
+        branchNodeId: 'branch-1',
+      }),
     ])
 
     const result = engine.validateConnection('start-1', 'condition-1')
@@ -56,7 +59,10 @@ describe('ValidationEngine', () => {
   it('rejects branch to condition connections in graph validation', () => {
     const nodes = [
       createNode('branch-1', 'branch', { name: '分流节点' }),
-      createNode('condition-1', 'condition', { name: '条件节点', branchNodeId: 'branch-1' }),
+      createNode('condition-1', 'condition', {
+        name: '条件节点',
+        branchNodeId: 'branch-1',
+      }),
       createNode('approval-1', 'approval', { name: '审批节点' }),
     ]
     const edges = [
@@ -98,7 +104,10 @@ describe('ValidationEngine', () => {
   it('reports invalid edges in an existing graph', () => {
     const nodes = [
       createNode('start-1', 'start', { name: '发起节点' }),
-      createNode('condition-1', 'condition', { name: '条件节点', branchNodeId: 'branch-1' }),
+      createNode('condition-1', 'condition', {
+        name: '条件节点',
+        branchNodeId: 'branch-1',
+      }),
     ]
     const edges = [{ id: 'edge-invalid', source: 'start-1', target: 'condition-1' }]
     const engine = new ValidationEngine(nodes, edges)
@@ -319,7 +328,9 @@ describe('ValidationEngine', () => {
             edgeType: 'SEQUENCE',
             condition: {
               conjunction: 'and',
-              children: [{ left: { type: 'field', field: 'amount' }, op: 'less', right: 1000 }],
+              children: [
+                { left: { type: 'field', field: 'amount' }, op: 'less', right: 1000 },
+              ],
             },
           },
         },
@@ -332,7 +343,11 @@ describe('ValidationEngine', () => {
             condition: {
               conjunction: 'and',
               children: [
-                { left: { type: 'field', field: 'amount' }, op: 'greater_or_equal', right: 1000 },
+                {
+                  left: { type: 'field', field: 'amount' },
+                  op: 'greater_or_equal',
+                  right: 1000,
+                },
               ],
             },
           },
@@ -421,7 +436,9 @@ describe('ValidationEngine', () => {
       ])
     )
     expect(
-      snapshot.items.filter((item) => item.code === WORKFLOW_DIAGNOSTIC_CODES.EDGE_CONDITION_REQUIRED)
+      snapshot.items.filter(
+        (item) => item.code === WORKFLOW_DIAGNOSTIC_CODES.EDGE_CONDITION_REQUIRED
+      )
     ).toHaveLength(2)
   })
 
@@ -494,5 +511,42 @@ describe('ValidationEngine', () => {
         }),
       ])
     )
+  })
+})
+
+describe('form field revision diagnostics', () => {
+  it('retains the draft condition and diagnoses a removed field inside nested groups', () => {
+    const condition = {
+      conjunction: 'and',
+      children: [
+        {
+          conjunction: 'or',
+          children: [
+            { left: { type: 'field', field: 'removed' }, op: 'equal', right: 1 },
+          ],
+        },
+      ],
+    }
+    const edges = [
+      { id: 'route', source: 's', target: 'a', data: { condition } },
+      { id: 'fallback', source: 's', target: 'e' },
+    ]
+    const snapshot = buildWorkflowValidationSnapshot({
+      nodes: [
+        createNode('s', 'start'),
+        createNode('a', 'approval'),
+        createNode('e', 'end'),
+      ],
+      edges,
+      conditionFieldSource: { fields: [{ name: 'amount' }] },
+    })
+    expect(snapshot.items).toContainEqual(
+      expect.objectContaining({
+        code: 'CONDITION_FIELD_UNAVAILABLE',
+        targetId: 'route',
+        message: expect.stringContaining('removed'),
+      })
+    )
+    expect(edges[0].data.condition).toEqual(condition)
   })
 })

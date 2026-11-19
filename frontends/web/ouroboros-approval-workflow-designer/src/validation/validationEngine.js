@@ -1,6 +1,10 @@
 import { reactFlowTypeToMiddleType } from '../canvas-adapters/react-flow/nodeTypeMapping.js'
 import { SYNTHETIC_NODE_TYPES } from '../translator/define/reactflow.js'
-import { NODE_TYPES, hasCycle, isValidConnection as isAllowedConnection } from './connection-rules.js'
+import {
+  NODE_TYPES,
+  hasCycle,
+  isValidConnection as isAllowedConnection,
+} from './connection-rules.js'
 import {
   edgeBelongsToConditionalRoute,
   resolveEdgeConditionValue,
@@ -26,6 +30,7 @@ export const WORKFLOW_DIAGNOSTIC_CODES = Object.freeze({
   NODE_OUTGOING_REQUIRED: 'NODE_OUTGOING_REQUIRED',
   EDGE_CONDITION_REQUIRED: 'EDGE_CONDITION_REQUIRED',
   CONDITION_FIELD_SOURCE_REQUIRED: 'CONDITION_FIELD_SOURCE_REQUIRED',
+  CONDITION_FIELD_UNAVAILABLE: 'CONDITION_FIELD_UNAVAILABLE',
   CONDITIONAL_BRANCH_COVERAGE_UNCONFIRMED: 'CONDITIONAL_BRANCH_COVERAGE_UNCONFIRMED',
   TIMEOUT_TRANSFER_TARGET_REQUIRED: 'TIMEOUT_TRANSFER_TARGET_REQUIRED',
   START_NODE_UNIQUE_REQUIRED: 'START_NODE_UNIQUE_REQUIRED',
@@ -48,7 +53,12 @@ const WORKFLOW_DIAGNOSTIC_SEVERITY_PRIORITY = Object.freeze({
   error: 2,
 })
 
-const buildValidationResult = ({ valid, code = null, error = '', shouldNotify = false }) => ({
+const buildValidationResult = ({
+  valid,
+  code = null,
+  error = '',
+  shouldNotify = false,
+}) => ({
   valid,
   code,
   error,
@@ -157,7 +167,13 @@ export class ValidationEngine {
       return '节点'
     }
 
-    return node.data?.name || node.data?.label || NODE_TYPE_LABELS[node.type] || node.id || '节点'
+    return (
+      node.data?.name ||
+      node.data?.label ||
+      NODE_TYPE_LABELS[node.type] ||
+      node.id ||
+      '节点'
+    )
   }
 
   resolveValidationNodeType(node) {
@@ -222,7 +238,9 @@ export class ValidationEngine {
       })
     }
 
-    const duplicatedEdge = this.edges.find((edge) => edge?.source === sourceId && edge?.target === resolvedTargetId)
+    const duplicatedEdge = this.edges.find(
+      (edge) => edge?.source === sourceId && edge?.target === resolvedTargetId
+    )
     if (duplicatedEdge) {
       return buildValidationResult({
         valid: false,
@@ -253,7 +271,10 @@ export class ValidationEngine {
       })
     }
 
-    if (!MULTI_INCOMING_NODE_TYPES.has(targetNode.type) && this.getIncomingEdges(resolvedTargetId).length > 0) {
+    if (
+      !MULTI_INCOMING_NODE_TYPES.has(targetNode.type) &&
+      this.getIncomingEdges(resolvedTargetId).length > 0
+    ) {
       return buildValidationResult({
         valid: false,
         code: VALIDATION_ERROR_CODES.TARGET_INCOMING_LIMIT,
@@ -262,7 +283,9 @@ export class ValidationEngine {
       })
     }
 
-    if (hasCycle(this.nodes, this.edges, { source: sourceId, target: resolvedTargetId })) {
+    if (
+      hasCycle(this.nodes, this.edges, { source: sourceId, target: resolvedTargetId })
+    ) {
       return buildValidationResult({
         valid: false,
         code: VALIDATION_ERROR_CODES.CYCLE,
@@ -400,9 +423,10 @@ export function buildWorkflowValidationSnapshot({
       return
     }
 
-    const transferTo = typeof timeout.transferTo === 'string'
-      ? timeout.transferTo.trim()
-      : timeout.transferTo
+    const transferTo =
+      typeof timeout.transferTo === 'string'
+        ? timeout.transferTo.trim()
+        : timeout.transferTo
     if (transferTo) {
       return
     }
@@ -442,7 +466,9 @@ export function buildWorkflowValidationSnapshot({
     )
   })
 
-  const conditionalEdges = edges.filter((edge) => edgeBelongsToConditionalRoute(edge, edges))
+  const conditionalEdges = edges.filter((edge) =>
+    edgeBelongsToConditionalRoute(edge, edges)
+  )
   if (conditionalEdges.length > 0 && conditionFields.length === 0) {
     items.push(
       buildWorkflowDiagnosticItem({
@@ -456,8 +482,35 @@ export function buildWorkflowValidationSnapshot({
     )
   }
 
+  const conditionFieldNames = (fields) =>
+    fields.flatMap((field) =>
+      Array.isArray(field.children)
+        ? conditionFieldNames(field.children)
+        : [field.value || field.name]
+    )
+  const availableConditionFields = new Set(conditionFieldNames(conditionFields))
+  const checkConditionFields = (condition, edge) => {
+    if (Array.isArray(condition?.children)) {
+      condition.children.forEach((child) => checkConditionFields(child, edge))
+      return
+    }
+    const name = condition?.left?.field
+    if (!name || availableConditionFields.has(name)) return
+    items.push(
+      buildWorkflowDiagnosticItem({
+        id: `edge:${edge.id}:${WORKFLOW_DIAGNOSTIC_CODES.CONDITION_FIELD_UNAVAILABLE}:${name}`,
+        severity: 'error',
+        code: WORKFLOW_DIAGNOSTIC_CODES.CONDITION_FIELD_UNAVAILABLE,
+        message: `连线条件引用的字段“${name}”已不可用，请重新选择字段`,
+        targetType: 'edge',
+        targetId: edge.id,
+        blocking: true,
+      })
+    )
+  }
   conditionalEdges.forEach((edge) => {
     const condition = resolveEdgeConditionValue(edge)
+    checkConditionFields(condition, edge)
     if (conditionPayloadIsFilled(condition)) {
       return
     }
@@ -479,7 +532,10 @@ export function buildWorkflowValidationSnapshot({
 
   nodes.forEach((node) => {
     const outgoingEdges = validationEngine.getOutgoingEdges(node.id)
-    if (outgoingEdges.length <= 1 || !outgoingEdges.some((edge) => edgeBelongsToConditionalRoute(edge, edges))) {
+    if (
+      outgoingEdges.length <= 1 ||
+      !outgoingEdges.some((edge) => edgeBelongsToConditionalRoute(edge, edges))
+    ) {
       return
     }
 
@@ -497,24 +553,26 @@ export function buildWorkflowValidationSnapshot({
   })
 
   const deduplicatedItems = Array.from(
-    items.reduce((result, item) => {
-      if (!item?.id) {
-        return result
-      }
+    items
+      .reduce((result, item) => {
+        if (!item?.id) {
+          return result
+        }
 
-      const existing = result.get(item.id)
-      if (!existing) {
-        result.set(item.id, item)
-        return result
-      }
+        const existing = result.get(item.id)
+        if (!existing) {
+          result.set(item.id, item)
+          return result
+        }
 
-      result.set(item.id, {
-        ...existing,
-        severity: chooseHigherSeverity(existing.severity, item.severity),
-        blocking: existing.blocking || item.blocking,
-      })
-      return result
-    }, new Map()).values()
+        result.set(item.id, {
+          ...existing,
+          severity: chooseHigherSeverity(existing.severity, item.severity),
+          blocking: existing.blocking || item.blocking,
+        })
+        return result
+      }, new Map())
+      .values()
   )
 
   return {

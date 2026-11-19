@@ -57,22 +57,27 @@ test('outer page actions and explicit editor inputs stay separated', async ({ pa
     'formType',
     'formId',
   ])
-  expect(designTimeContract.basicInfoFormItems?.find((item) => item.name === 'formId')).toMatchObject({
+  expect(
+    designTimeContract.basicInfoFormItems?.find((item) => item.name === 'formId')
+  ).toMatchObject({
     type: 'select',
-    label: '表单标识',
+    label: '关联表单',
     labelField: 'title',
-    valueField: 'fullName',
+    valueField: 'name',
     searchable: true,
     clearable: true,
   })
   expect(
-    designTimeContract.basicInfoFormItems?.find((item) => item.name === 'formId')?.source?.url
-  ).toBe('/api/dev/${appName}/business-model/list')
+    designTimeContract.basicInfoFormItems?.find((item) => item.name === 'formId')?.source
+      ?.url
+  ).toBe('/api/dev/${appName}/approval-workflow/base-info/form/${formType}')
   expect(designTimeContract.basicInfoButtonLabel).toBeNull()
   expect(designTimeContract.basicInfoButtonIcon).toBeNull()
   expect(designTimeContract.basicInfoOpenMode).toBeNull()
   expect(designTimeContract.conditionFieldSource).toBeNull()
-  expect(designTimeContract.candidateSourceApi?.list?.url).toBe('/api/approval-workflow/candidate')
+  expect(designTimeContract.candidateSourceApi?.list?.url).toBe(
+    '/api/approval-workflow/candidate'
+  )
   expect(designTimeContract.conditionFieldSourceApi).toBeNull()
   expect(designTimeContract.formPermissionFieldSourceApi).toBeNull()
   expect(designTimeContract.candidateFieldSourceApi).toBeUndefined()
@@ -80,19 +85,27 @@ test('outer page actions and explicit editor inputs stay separated', async ({ pa
   expect(designTimeContract.formFieldSourceApi?.data?.formType).toBe(
     '${flowDefinition.form.formType}'
   )
-  expect(designTimeContract.formFieldSourceApi?.data?.formKey).toBe('${flowDefinition.form.formId}')
-  expect(designTimeContract.formFieldSourceApi?.data?.definitionId).toBe('${flowDefinition.name}')
+  expect(designTimeContract.formFieldSourceApi?.data?.formKey).toBe(
+    '${flowDefinition.form.formId}'
+  )
+  expect(designTimeContract.formFieldSourceApi?.data?.definitionId).toBe(
+    '${flowDefinition.name}'
+  )
   expect(designTimeContract.formFieldSourceApi?.url).toBe(
-    '/api/dev/${appName}/business-model-helper/approval-workflow-fields'
+    '/api/dev/${appName}/approval-workflow/base-info/workflow-field'
   )
   expect(designTimeContract.basicInfoDataSourceApi?.url).toBe(
-    '/api/dev/${appName}/business-model-helper/approval-workflow-fields'
+    '/api/dev/${appName}/approval-workflow/base-info/workflow-field'
   )
   expect(designTimeContract.basicInfoDataSourceApi?.data?.formType).toBe(
     '${flowDefinition.form.formType}'
   )
-  expect(designTimeContract.basicInfoDataSourceApi?.data?.formKey).toBe('${flowDefinition.form.formId}')
-  expect(designTimeContract.basicInfoDataSourceApi?.data?.definitionId).toBe('${flowDefinition.name}')
+  expect(designTimeContract.basicInfoDataSourceApi?.data?.formKey).toBe(
+    '${flowDefinition.form.formId}'
+  )
+  expect(designTimeContract.basicInfoDataSourceApi?.data?.definitionId).toBe(
+    '${flowDefinition.name}'
+  )
   await expect(page.getByRole('button', { name: '保存' })).toBeVisible()
   await expect(page.getByRole('button', { name: '发布' })).toHaveCount(0)
 
@@ -107,14 +120,9 @@ test('outer page actions and explicit editor inputs stay separated', async ({ pa
   expect(applicationManagementContract.formFieldSourceApi?.url).toBe(
     '/api/approval-workflow/base-info/form/${flowDefinition.form.formType}/${flowDefinition.form.formId}/workflow-field'
   )
-  expect(applicationManagementContract.basicInfoFormItems?.map((item) => item.name)).toEqual([
-    'name',
-    'title',
-    'description',
-    undefined,
-    'formType',
-    'formId',
-  ])
+  expect(
+    applicationManagementContract.basicInfoFormItems?.map((item) => item.name)
+  ).toEqual(['name', 'title', 'description', undefined, 'formType', 'formId'])
   expect(applicationManagementContract.basicInfoButtonLabel).toBeNull()
   expect(applicationManagementContract.basicInfoButtonIcon).toBeNull()
   expect(applicationManagementContract.basicInfoOpenMode).toBeNull()
@@ -141,18 +149,24 @@ test('design-time draft resolves field sources from the initialized flow definit
 
   await workflowHarnessPage.gotoScenario('new-flow')
 
-  await expect.poll(async () => {
-    return (await workflowHarnessPage.fetcherCalls()).filter((call) =>
-      call?.url?.includes('/business-model-helper/approval-workflow-fields')
-    ).length
-  }).toBeGreaterThan(0)
+  await expect
+    .poll(async () => {
+      return (await workflowHarnessPage.fetcherCalls()).filter((call) =>
+        call?.url?.includes('/approval-workflow/base-info/workflow-field')
+      ).length
+    })
+    .toBeGreaterThan(0)
 
   const fieldSourceCalls = (await workflowHarnessPage.fetcherCalls()).filter((call) =>
-    call?.url?.includes('/business-model-helper/approval-workflow-fields')
+    call?.url?.includes('/approval-workflow/base-info/workflow-field')
   )
-  expect(fieldSourceCalls.every((call) => call.data?.formType === 'business-model')).toBe(true)
+  expect(fieldSourceCalls.every((call) => call.data?.formType === 'business-model')).toBe(
+    true
+  )
   expect(fieldSourceCalls.every((call) => call.data?.formKey === 'demo.order')).toBe(true)
-  expect(fieldSourceCalls.every((call) => call.data?.definitionId === 'demo-order-approval')).toBe(true)
+  expect(
+    fieldSourceCalls.every((call) => call.data?.definitionId === 'demo-order-approval')
+  ).toBe(true)
 
   const definition = await workflowHarnessPage.currentDefinition()
   expect(definition.form.formType).toBe('business-model')
@@ -166,28 +180,32 @@ test('design-time flow info switch re-resolves field sources from the updated fo
 
   await workflowHarnessPage.gotoScenario('new-flow')
 
-  await expect.poll(async () => {
-    return (await workflowHarnessPage.fetcherCalls()).filter(
-      (call) =>
-        call?.url?.includes('/business-model-helper/approval-workflow-fields') &&
-        call.data?.formKey === 'demo.order'
-    ).length
-  }).toBeGreaterThan(0)
+  await expect
+    .poll(async () => {
+      return (await workflowHarnessPage.fetcherCalls()).filter(
+        (call) =>
+          call?.url?.includes('/approval-workflow/base-info/workflow-field') &&
+          call.data?.formKey === 'demo.order'
+      ).length
+    })
+    .toBeGreaterThan(0)
 
   const submitted = await workflowHarnessPage.invokeHarness('submitBasicInfo', {
     formId: 'demo.invoice',
   })
   expect(submitted).toBe(true)
 
-  await expect.poll(async () => {
-    return (await workflowHarnessPage.fetcherCalls()).filter(
-      (call) =>
-        call?.url?.includes('/business-model-helper/approval-workflow-fields') &&
-        call.data?.formType === 'business-model' &&
-        call.data?.formKey === 'demo.invoice' &&
-        call.data?.definitionId === 'demo-order-approval'
-    ).length
-  }).toBeGreaterThan(0)
+  await expect
+    .poll(async () => {
+      return (await workflowHarnessPage.fetcherCalls()).filter(
+        (call) =>
+          call?.url?.includes('/approval-workflow/base-info/workflow-field') &&
+          call.data?.formType === 'business-model' &&
+          call.data?.formKey === 'demo.invoice' &&
+          call.data?.definitionId === 'demo-order-approval'
+      ).length
+    })
+    .toBeGreaterThan(0)
 
   const definition = await workflowHarnessPage.currentDefinition()
   expect(definition.form.formType).toBe('business-model')
@@ -202,19 +220,23 @@ test('design-time split edge inspector follows the refreshed condition field sou
   await workflowHarnessPage.gotoScenario('design-time-branch-editable')
 
   await workflowHarnessPage.selectEdge('edge-b-2')
-  await expect.poll(async () => {
-    return await workflowHarnessPage.rightPanelText()
-  }).toContain('条件表达式')
+  await expect
+    .poll(async () => {
+      return await workflowHarnessPage.rightPanelText()
+    })
+    .toContain('条件表达式')
 
-  await expect.poll(async () => {
-    return (await workflowHarnessPage.fetcherCalls()).filter(
-      (call) =>
-        call?.url?.includes('/business-model-helper/approval-workflow-fields') &&
-        call.data?.formType === 'business-model' &&
-        call.data?.formKey === 'demo.order' &&
-        call.data?.definitionId === 'demo-order-branch-approval'
-    ).length
-  }).toBeGreaterThan(0)
+  await expect
+    .poll(async () => {
+      return (await workflowHarnessPage.fetcherCalls()).filter(
+        (call) =>
+          call?.url?.includes('/approval-workflow/base-info/workflow-field') &&
+          call.data?.formType === 'business-model' &&
+          call.data?.formKey === 'demo.order' &&
+          call.data?.definitionId === 'demo-order-branch-approval'
+      ).length
+    })
+    .toBeGreaterThan(0)
 
   const initialPanelText = await workflowHarnessPage.rightPanelText()
   expect(initialPanelText).toContain('金额')
@@ -225,20 +247,24 @@ test('design-time split edge inspector follows the refreshed condition field sou
   })
   expect(submitted).toBe(true)
 
-  await expect.poll(async () => {
-    return (await workflowHarnessPage.fetcherCalls()).filter(
-      (call) =>
-        call?.url?.includes('/business-model-helper/approval-workflow-fields') &&
-        call.data?.formType === 'business-model' &&
-        call.data?.formKey === '' &&
-        call.data?.definitionId === 'demo-order-branch-approval'
-    ).length
-  }).toBeGreaterThan(0)
+  await expect
+    .poll(async () => {
+      return (await workflowHarnessPage.fetcherCalls()).filter(
+        (call) =>
+          call?.url?.includes('/approval-workflow/base-info/workflow-field') &&
+          call.data?.formType === 'business-model' &&
+          call.data?.formKey === '' &&
+          call.data?.definitionId === 'demo-order-branch-approval'
+      ).length
+    })
+    .toBeGreaterThan(0)
 
   await workflowHarnessPage.selectEdge('edge-b-2')
-  await expect.poll(async () => {
-    return await workflowHarnessPage.rightPanelText()
-  }).toContain('当前入口未提供可用条件字段')
+  await expect
+    .poll(async () => {
+      return await workflowHarnessPage.rightPanelText()
+    })
+    .toContain('当前入口未提供可用条件字段')
 })
 
 test('base info entry contract supports customized label/icon and hides itself when form items are absent', async ({
@@ -281,10 +307,12 @@ test('react flow contract: designer shell has three panels and palette omits syn
 
   await workflowHarnessPage.gotoScenario('v2-editable')
 
-  await expect.poll(async () => {
-    const snapshot = await workflowHarnessPage.reactFlowContractSnapshot()
-    return snapshot.hasThreePanelShell
-  }).toBe(true)
+  await expect
+    .poll(async () => {
+      const snapshot = await workflowHarnessPage.reactFlowContractSnapshot()
+      return snapshot.hasThreePanelShell
+    })
+    .toBe(true)
 
   const snapshot = await workflowHarnessPage.reactFlowContractSnapshot()
   expect(snapshot.paletteIncludesEnd).toBe(true)
@@ -298,8 +326,10 @@ test('react flow contract: branch scenario does not render condition pseudo node
 
   await workflowHarnessPage.gotoScenario('branch-editable')
 
-  await expect.poll(async () => {
-    const snapshot = await workflowHarnessPage.reactFlowContractSnapshot()
-    return snapshot.hasConditionPseudoNodeInCanvas
-  }).toBe(false)
+  await expect
+    .poll(async () => {
+      const snapshot = await workflowHarnessPage.reactFlowContractSnapshot()
+      return snapshot.hasConditionPseudoNodeInCanvas
+    })
+    .toBe(false)
 })

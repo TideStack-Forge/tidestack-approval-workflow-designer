@@ -12,23 +12,40 @@ const {
   normalizeWorkflowCandidateSourceFromApi,
   resolveWorkflowSourceApi,
 } = require('../../../src/editor-core/workflowSourceContract.js')
-const { normalizeWorkflowConditionFieldSource } = require('../../../src/editor-core/coreContract.js')
+const {
+  normalizeWorkflowConditionFieldSource,
+} = require('../../../src/editor-core/coreContract.js')
 
 test('condition fields use actual value types to select inputs and comparison operators', () => {
   const cases = [
-    ['Integer', 'number'], ['Long', 'number'], ['Short', 'number'],
-    ['Float', 'number'], ['Double', 'number'], ['Decimal', 'number'],
-    ['Date', 'date'], ['DateTime', 'datetime'], ['Time', 'time'],
-    ['String', 'text'], ['Boolean', 'boolean'],
-    ['Snowflake', 'text'], ['Json', 'text'], ['Map', 'text'],
-    ['List', 'text'], ['CustomValue', 'text'],
+    ['Integer', 'number'],
+    ['Long', 'number'],
+    ['Short', 'number'],
+    ['Float', 'number'],
+    ['Double', 'number'],
+    ['Decimal', 'number'],
+    ['Date', 'date'],
+    ['DateTime', 'datetime'],
+    ['Time', 'time'],
+    ['String', 'text'],
+    ['Boolean', 'boolean'],
+    ['Snowflake', 'text'],
+    ['Json', 'text'],
+    ['Map', 'text'],
+    ['List', 'text'],
+    ['CustomValue', 'text'],
   ]
   const fields = cases.map(([valueType], index) => ({
-    name: `field${index}`, type: '自定义业务字段', valueType,
+    name: `field${index}`,
+    type: '自定义业务字段',
+    valueType,
   }))
   const sources = deriveWorkflowFieldSources({ fields })
 
-  assert.deepStrictEqual(sources.formFieldSource.fields.map((field) => field.type), fields.map((field) => field.type))
+  assert.deepStrictEqual(
+    sources.formFieldSource.fields.map((field) => field.type),
+    fields.map((field) => field.type)
+  )
   assert.strictEqual(sources.conditionFieldSource.fields.length, cases.length)
   sources.conditionFieldSource.fields.forEach((field, index) => {
     const [valueType, expectedType] = cases[index]
@@ -51,7 +68,12 @@ test('condition fields use actual value types to select inputs and comparison op
 test('value type takes precedence over business field names and bounds explicitly supplied operators', () => {
   const source = normalizeWorkflowConditionFieldSource([
     { name: 'code', type: 'number', valueType: 'String' },
-    { name: 'amount', type: '单行文本', valueType: 'Decimal', operators: ['greater', 'like'] },
+    {
+      name: 'amount',
+      type: '单行文本',
+      valueType: 'Decimal',
+      operators: ['greater', 'like'],
+    },
     { name: 'object', type: 'text', valueType: 'Map' },
   ])
 
@@ -65,16 +87,31 @@ test('value type takes precedence over business field names and bounds explicitl
 test('value type constraints also bound default operators and preserve declared equality operators', () => {
   const source = normalizeWorkflowConditionFieldSource([
     { name: 'object', valueType: 'Map', defaultOp: 'like' },
-    { name: 'amount', valueType: 'Decimal', defaultOp: 'like', operators: ['greater', 'less'] },
-    { name: 'status', valueType: 'String', operators: ['select_equals', 'select_not_equals'] },
+    {
+      name: 'amount',
+      valueType: 'Decimal',
+      defaultOp: 'like',
+      operators: ['greater', 'less'],
+    },
+    {
+      name: 'status',
+      valueType: 'String',
+      operators: ['select_equals', 'select_not_equals'],
+    },
     { name: 'unsupported', valueType: 'Map', operators: ['like'] },
   ])
 
   assert.strictEqual(source.fields[0].defaultOp, 'equal')
   assert.strictEqual(source.fields[1].defaultOp, 'greater')
-  assert.deepStrictEqual(source.fields[2].operators, ['select_equals', 'select_not_equals'])
+  assert.deepStrictEqual(source.fields[2].operators, [
+    'select_equals',
+    'select_not_equals',
+  ])
   assert.strictEqual(source.fields[2].defaultOp, 'select_equals')
-  assert.deepStrictEqual(source.fields.map((field) => field.name), ['object', 'amount', 'status'])
+  assert.deepStrictEqual(
+    source.fields.map((field) => field.name),
+    ['object', 'amount', 'status']
+  )
 })
 
 test('workflow source contract normalizes candidate arrays into stable item payloads', () => {
@@ -365,4 +402,20 @@ test('workflow source contract keeps schema-first candidate items while attachin
       },
     ],
   })
+})
+
+test('selection conditions preserve compiled options and selection operators instead of becoming text inputs', () => {
+  const options = [{ value: 'equipment', label: '设备' }]
+  const source = normalizeWorkflowConditionFieldSource([
+    {
+      name: 'purchaseType',
+      type: 'select',
+      valueType: 'String',
+      options,
+      operators: ['select_equals', 'select_any_in'],
+    },
+  ])
+  assert.strictEqual(source.fields[0].type, 'select')
+  assert.deepStrictEqual(source.fields[0].options, options)
+  assert.deepStrictEqual(source.fields[0].operators, ['select_equals', 'select_any_in'])
 })

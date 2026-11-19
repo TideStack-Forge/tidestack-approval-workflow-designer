@@ -23,7 +23,8 @@ import { ApprovalWorkflowEditorIntegrationAdapter } from '../editor-integration/
 const hasDefinitionValue = (definition) =>
   !!definition && typeof definition === 'object' && Object.keys(definition).length > 0
 
-const buildUpgradeNoticeKey = (definitionId, flowKey) => definitionId || flowKey || '__draft__'
+const buildUpgradeNoticeKey = (definitionId, flowKey) =>
+  definitionId || flowKey || '__draft__'
 
 const readEditorMode = (props) => `${props?.data?.mode || ''}`.toLowerCase()
 
@@ -57,7 +58,11 @@ const clonePlainValue = (value) => {
   return JSON.parse(JSON.stringify(value))
 }
 
-const resolveExternalSourceOrFallback = async (sourcePromise, fallbackValue, sourceName) => {
+const resolveExternalSourceOrFallback = async (
+  sourcePromise,
+  fallbackValue,
+  sourceName
+) => {
   try {
     return {
       value: await sourcePromise,
@@ -139,6 +144,7 @@ const normalizeBasicInfoFormItems = (formItems) =>
 const buildBasicInfoFormShell = (formItems) => ({
   type: 'form',
   name: BASIC_INFO_FORM_NAME,
+  id: BASIC_INFO_FORM_NAME,
   title: false,
   wrapWithPanel: false,
   mode: 'horizontal',
@@ -167,23 +173,22 @@ const normalizeBasicInfoFormKey = (formKeyValue, fallbackValue = '') => {
 
 const readDefinitionFormBinding = (definition, fallbackData = {}) => {
   const form = definition?.form || {}
-  const hasTopLevelFormKey = Object.prototype.hasOwnProperty.call(definition || {}, 'formKey')
+  const hasTopLevelFormKey = Object.prototype.hasOwnProperty.call(
+    definition || {},
+    'formKey'
+  )
   const hasNestedFormId = Object.prototype.hasOwnProperty.call(form, 'formId')
   const hasNestedFormKey = Object.prototype.hasOwnProperty.call(form, 'formKey')
 
   return {
-    formType:
-      form.formType ??
-      definition?.formType ??
-      fallbackData?.formType ??
-      null,
+    formType: form.formType ?? definition?.formType ?? fallbackData?.formType ?? null,
     formId: hasNestedFormId
-        ? form.formId
-        : hasNestedFormKey
-          ? form.formKey
-          : hasTopLevelFormKey
-            ? definition.formKey
-            : fallbackData?.formId ?? fallbackData?.formKey ?? null,
+      ? form.formId
+      : hasNestedFormKey
+        ? form.formKey
+        : hasTopLevelFormKey
+          ? definition.formKey
+          : (fallbackData?.formId ?? fallbackData?.formKey ?? null),
   }
 }
 
@@ -226,7 +231,8 @@ const buildInitialDefinitionMetaFromProps = (props) => {
     metaPatch.formKey = typeof data.formId === 'string' ? data.formId.trim() : data.formId
   }
   if (Object.prototype.hasOwnProperty.call(data, 'formKey')) {
-    metaPatch.formKey = typeof data.formKey === 'string' ? data.formKey.trim() : data.formKey
+    metaPatch.formKey =
+      typeof data.formKey === 'string' ? data.formKey.trim() : data.formKey
   }
 
   return Object.keys(metaPatch).length > 0 ? metaPatch : null
@@ -246,11 +252,7 @@ const buildBasicInfoSubmitActions = () => [
   },
 ]
 
-const buildBasicInfoContainerSchema = ({
-  openMode,
-  formItems,
-  onBasicInfoSubmit,
-}) => {
+const buildBasicInfoContainerSchema = ({ openMode, formItems, onBasicInfoSubmit }) => {
   const containerSchema = {
     title: BASIC_INFO_DEFAULT_TITLE,
     closeOnEsc: true,
@@ -359,6 +361,7 @@ export class ApprovalWorkFlowEditor extends React.Component {
       ),
       candidateFieldSource: normalizeWorkflowFormFieldSource(null),
       basicInfoData: {},
+      fieldSourceStatus: 'loading',
       diagnostics: createEmptyWorkflowDiagnosticsSnapshot(),
       selection: createEmptyWorkflowSelectionSnapshot(),
       v1UpgradeNoticeKey: null,
@@ -367,7 +370,11 @@ export class ApprovalWorkFlowEditor extends React.Component {
   }
 
   isReadonly(props = this.props) {
-    return props?.readonly === true || props?.static === true || readEditorMode(props) === 'preview'
+    return (
+      props?.readonly === true ||
+      props?.static === true ||
+      readEditorMode(props) === 'preview'
+    )
   }
 
   async generateFlowDefinition() {
@@ -376,7 +383,9 @@ export class ApprovalWorkFlowEditor extends React.Component {
         ...this.props,
         source:
           this.props?.source || this.props?.flowDefinitionSource
-            ? createDefinitionRequestSource(this.props?.source || this.props?.flowDefinitionSource)
+            ? createDefinitionRequestSource(
+                this.props?.source || this.props?.flowDefinitionSource
+              )
             : this.definitionLoadKey
               ? createDefinitionRequestSource({
                   method: 'get',
@@ -425,8 +434,14 @@ export class ApprovalWorkFlowEditor extends React.Component {
       !isEqual(prevProps.formFieldSourceApi, this.props.formFieldSourceApi) ||
       !isEqual(prevProps.candidateSource, this.props.candidateSource) ||
       !isEqual(prevProps.candidateSourceApi, this.props.candidateSourceApi) ||
-      !isEqual(prevProps.formPermissionFieldSource, this.props.formPermissionFieldSource) ||
-      !isEqual(prevProps.formPermissionFieldSourceApi, this.props.formPermissionFieldSourceApi) ||
+      !isEqual(
+        prevProps.formPermissionFieldSource,
+        this.props.formPermissionFieldSource
+      ) ||
+      !isEqual(
+        prevProps.formPermissionFieldSourceApi,
+        this.props.formPermissionFieldSourceApi
+      ) ||
       !isEqual(prevProps.basicInfoDataSourceApi, this.props.basicInfoDataSourceApi) ||
       prevProps.readonly !== this.props.readonly ||
       prevProps.static !== this.props.static ||
@@ -496,17 +511,27 @@ export class ApprovalWorkFlowEditor extends React.Component {
       !isEqual(this.props.formFieldSourceApi, nextProps.formFieldSourceApi) ||
       !isEqual(this.props.candidateSource, nextProps.candidateSource) ||
       !isEqual(this.props.candidateSourceApi, nextProps.candidateSourceApi) ||
-      !isEqual(this.props.formPermissionFieldSource, nextProps.formPermissionFieldSource) ||
-      !isEqual(this.props.formPermissionFieldSourceApi, nextProps.formPermissionFieldSourceApi) ||
+      !isEqual(
+        this.props.formPermissionFieldSource,
+        nextProps.formPermissionFieldSource
+      ) ||
+      !isEqual(
+        this.props.formPermissionFieldSourceApi,
+        nextProps.formPermissionFieldSourceApi
+      ) ||
       this.state.session !== nextState.session ||
       !isEqual(this.state.value, nextState.value) ||
       this.state.sourceFormatVersion !== nextState.sourceFormatVersion ||
       !isEqual(this.state.conditionFieldSource, nextState.conditionFieldSource) ||
       !isEqual(this.state.candidateSource, nextState.candidateSource) ||
       !isEqual(this.state.formFieldSource, nextState.formFieldSource) ||
-      !isEqual(this.state.formPermissionFieldSource, nextState.formPermissionFieldSource) ||
+      !isEqual(
+        this.state.formPermissionFieldSource,
+        nextState.formPermissionFieldSource
+      ) ||
       !isEqual(this.state.candidateFieldSource, nextState.candidateFieldSource) ||
       !isEqual(this.state.basicInfoData, nextState.basicInfoData) ||
+      this.state.fieldSourceStatus !== nextState.fieldSourceStatus ||
       !isEqual(this.state.diagnostics, nextState.diagnostics) ||
       !isEqual(this.state.selection, nextState.selection)
     )
@@ -574,7 +599,10 @@ export class ApprovalWorkFlowEditor extends React.Component {
     }
 
     if (session.shouldNotifyUpgrade(this.isReadonly())) {
-      const upgradeNoticeKey = buildUpgradeNoticeKey(flowDefinition?.id || flowDefinition?.name, this.flowKey)
+      const upgradeNoticeKey = buildUpgradeNoticeKey(
+        flowDefinition?.id || flowDefinition?.name,
+        this.flowKey
+      )
       if (this.state.v1UpgradeNoticeKey !== upgradeNoticeKey) {
         this.props.env.notify(
           'warning',
@@ -602,6 +630,31 @@ export class ApprovalWorkFlowEditor extends React.Component {
       ? definitionOverride
       : this.readDefinition()
     const sourceResolveData = this.buildExternalSourceResolveData(currentDefinition)
+    const binding = readDefinitionFormBinding(currentDefinition, this.props?.data)
+    const bindingKey = JSON.stringify(binding)
+    if (bindingKey !== this.externalSourceBindingKey) {
+      this.externalSourceBindingKey = bindingKey
+      const empty = deriveWorkflowFieldSources(null)
+      await new Promise((resolve) =>
+        this.setState(
+          {
+            formFieldSource: normalizeWorkflowFormFieldSource(empty.formFieldSource),
+            conditionFieldSource: normalizeWorkflowConditionFieldSource(
+              empty.conditionFieldSource
+            ),
+            formPermissionFieldSource: normalizeWorkflowFormPermissionFieldSource(
+              empty.formPermissionFieldSource
+            ),
+            candidateFieldSource: normalizeWorkflowFormFieldSource(
+              empty.candidateFieldSource
+            ),
+            basicInfoData: {},
+            fieldSourceStatus: binding.formId ? 'loading' : 'unbound',
+          },
+          resolve
+        )
+      )
+    }
     const sourceResults = await Promise.all([
       resolveExternalSourceOrFallback(
         ApprovalWorkflowEditorIntegrationAdapter.resolveFormFieldSources({
@@ -636,11 +689,8 @@ export class ApprovalWorkFlowEditor extends React.Component {
       return
     }
 
-    const [
-      nextFormFieldSources,
-      nextCandidateSource,
-      nextBasicInfoData,
-    ] = sourceResults.map((result) => result.value)
+    const [nextFormFieldSources, nextCandidateSource, nextBasicInfoData] =
+      sourceResults.map((result) => result.value)
     const sourceErrors = sourceResults.map((result) => result.error).filter(Boolean)
     if (sourceErrors.length > 0) {
       this.props.env?.notify?.(
@@ -649,27 +699,40 @@ export class ApprovalWorkFlowEditor extends React.Component {
       )
     }
 
-    const normalizedFormFieldSources = nextFormFieldSources || deriveWorkflowFieldSources(null)
-    const normalizedFormFieldSource =
-      normalizeWorkflowFormFieldSource(normalizedFormFieldSources.formFieldSource)
-    const normalizedConditionFieldSource =
-      normalizeWorkflowConditionFieldSource(normalizedFormFieldSources.conditionFieldSource)
+    const fieldSourceStatus = sourceResults[0].error
+      ? 'error'
+      : !binding.formId
+        ? 'unbound'
+        : 'ready'
+    const normalizedFormFieldSources =
+      nextFormFieldSources || deriveWorkflowFieldSources(null)
+    const normalizedFormFieldSource = normalizeWorkflowFormFieldSource(
+      normalizedFormFieldSources.formFieldSource
+    )
+    const normalizedConditionFieldSource = normalizeWorkflowConditionFieldSource(
+      normalizedFormFieldSources.conditionFieldSource
+    )
     const normalizedCandidateSource =
       normalizeWorkflowCandidateSource(nextCandidateSource)
     const normalizedFormPermissionFieldSource =
       normalizeWorkflowFormPermissionFieldSource(
         normalizedFormFieldSources.formPermissionFieldSource
       )
-    const normalizedCandidateFieldSource =
-      normalizeWorkflowFormFieldSource(normalizedFormFieldSources.candidateFieldSource)
+    const normalizedCandidateFieldSource = normalizeWorkflowFormFieldSource(
+      normalizedFormFieldSources.candidateFieldSource
+    )
 
     if (
       isEqual(this.state.conditionFieldSource, normalizedConditionFieldSource) &&
       isEqual(this.state.candidateSource, normalizedCandidateSource) &&
       isEqual(this.state.formFieldSource, normalizedFormFieldSource) &&
-      isEqual(this.state.formPermissionFieldSource, normalizedFormPermissionFieldSource) &&
+      isEqual(
+        this.state.formPermissionFieldSource,
+        normalizedFormPermissionFieldSource
+      ) &&
       isEqual(this.state.candidateFieldSource, normalizedCandidateFieldSource) &&
-      isEqual(this.state.basicInfoData, nextBasicInfoData)
+      isEqual(this.state.basicInfoData, nextBasicInfoData) &&
+      this.state.fieldSourceStatus === fieldSourceStatus
     ) {
       return
     }
@@ -683,6 +746,7 @@ export class ApprovalWorkFlowEditor extends React.Component {
           formPermissionFieldSource: normalizedFormPermissionFieldSource,
           candidateFieldSource: normalizedCandidateFieldSource,
           basicInfoData: nextBasicInfoData,
+          fieldSourceStatus,
         },
         resolve
       )
@@ -711,8 +775,13 @@ export class ApprovalWorkFlowEditor extends React.Component {
       return
     }
 
-    const nextDefinition = nextSession.getPersistedDefinition?.() || nextSession.getDefinition()
-    if (emitChange && this.props?.onChange && !isEqual(this.props.value, nextDefinition)) {
+    const nextDefinition =
+      nextSession.getPersistedDefinition?.() || nextSession.getDefinition()
+    if (
+      emitChange &&
+      this.props?.onChange &&
+      !isEqual(this.props.value, nextDefinition)
+    ) {
       this.props.onChange(nextDefinition)
     }
 
@@ -908,9 +977,52 @@ export class ApprovalWorkFlowEditor extends React.Component {
 
     return {
       key: 'approval-workflow-base-info-entry',
+      formValueProjection: {
+        formName: BASIC_INFO_FORM_NAME,
+        values: {
+          workflowFields: this.state.formFieldSource.fields,
+          workflowFieldStatus: this.state.fieldSourceStatus,
+        },
+      },
+      env: this.props.env,
       schema: appendSchemaClassName(
         buildBasicInfoEntrySchema({
-          formItems,
+          formItems: [
+            ...formItems,
+            {
+              type: 'divider',
+              title: '当前流程表单字段',
+            },
+            {
+              type: 'alert',
+              level: 'info',
+              visibleOn: '${workflowFieldStatus === "loading"}',
+              body: '正在加载表单字段…',
+            },
+            {
+              type: 'alert',
+              level: 'warning',
+              visibleOn: '${workflowFieldStatus === "error"}',
+              body: '表单字段加载失败，请检查关联表单后重试。',
+            },
+            {
+              type: 'tpl',
+              visibleOn: '${workflowFieldStatus === "unbound"}',
+              tpl: '尚未关联表单',
+            },
+            {
+              type: 'table',
+              visibleOn: '${workflowFieldStatus === "ready"}',
+              source: '${workflowFields}',
+              placeholder: '此表单未声明字段',
+              columns: [
+                { name: 'label', label: '字段名称' },
+                { name: 'name', label: '标识' },
+                { name: 'fieldType', label: '类型', placeholder: '-' },
+                { name: 'description', label: '说明', placeholder: '-' },
+              ],
+            },
+          ],
           buttonLabel: this.props.basicInfoButtonLabel,
           buttonIcon: this.props.basicInfoButtonIcon,
           openMode: this.props.basicInfoOpenMode,
@@ -924,6 +1036,8 @@ export class ApprovalWorkFlowEditor extends React.Component {
           ...(this.state.basicInfoData || {}),
           appName: resolvedAppName,
           flowDefinition: currentDefinition,
+          workflowFields: this.state.formFieldSource.fields,
+          workflowFieldStatus: this.state.fieldSourceStatus,
         },
       },
     }
@@ -1007,15 +1121,16 @@ export class ApprovalWorkFlowEditor extends React.Component {
       readonly,
       currentDefinition,
     })
-    const bridgeContext = ApprovalWorkflowEditorIntegrationAdapter.resolveCoreBridgeContext({
-      props: this.props,
-      flowKey: this.flowKey,
-      readonly,
-      coreCapabilities: normalizedCoreCapabilities,
-      candidateSource: this.state.candidateSource,
-      formPermissionFieldSource: this.state.formPermissionFieldSource,
-      candidateFieldSource: this.state.candidateFieldSource,
-    })
+    const bridgeContext =
+      ApprovalWorkflowEditorIntegrationAdapter.resolveCoreBridgeContext({
+        props: this.props,
+        flowKey: this.flowKey,
+        readonly,
+        coreCapabilities: normalizedCoreCapabilities,
+        candidateSource: this.state.candidateSource,
+        formPermissionFieldSource: this.state.formPermissionFieldSource,
+        candidateFieldSource: this.state.candidateFieldSource,
+      })
     const editorNode = shouldRenderDefinitionPlaceholder ? (
       <div
         className="workflow-editor-empty-state text-muted d-flex align-items-center justify-content-center"
@@ -1024,7 +1139,8 @@ export class ApprovalWorkFlowEditor extends React.Component {
           minHeight: 240,
           padding: 24,
           textAlign: 'center',
-        }}>
+        }}
+      >
         {t('请先在外层页面指定流程标识，再开始创建审批流程定义。')}
       </div>
     ) : (
@@ -1049,7 +1165,8 @@ export class ApprovalWorkFlowEditor extends React.Component {
         style={{
           height: '100%',
           minHeight: 0,
-        }}>
+        }}
+      >
         {editorNode}
       </div>
     )

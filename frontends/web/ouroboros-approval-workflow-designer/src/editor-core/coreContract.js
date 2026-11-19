@@ -27,7 +27,10 @@ export const createReadonlyCoreCapabilities = () => ({
   ...READONLY_APPROVAL_WORKFLOW_EDITOR_CORE_CAPABILITIES,
 })
 
-export const normalizeApprovalWorkflowEditorCoreCapabilities = (coreCapabilities, readonly) => {
+export const normalizeApprovalWorkflowEditorCoreCapabilities = (
+  coreCapabilities,
+  readonly
+) => {
   if (readonly) {
     return {
       ...READONLY_APPROVAL_WORKFLOW_EDITOR_CORE_CAPABILITIES,
@@ -51,14 +54,28 @@ export const normalizeApprovalWorkflowEditorCoreCapabilities = (coreCapabilities
 const EQUALITY_OPERATORS = ['equal', 'not_equal']
 const ORDERED_OPERATORS = [
   ...EQUALITY_OPERATORS,
-  'less', 'less_or_equal', 'greater', 'greater_or_equal',
-  'between', 'not_between', 'is_empty', 'is_not_empty',
+  'less',
+  'less_or_equal',
+  'greater',
+  'greater_or_equal',
+  'between',
+  'not_between',
+  'is_empty',
+  'is_not_empty',
 ]
 const STRING_OPERATORS = [
   ...EQUALITY_OPERATORS,
-  'like', 'not_like', 'starts_with', 'ends_with', 'is_empty', 'is_not_empty',
+  'like',
+  'not_like',
+  'starts_with',
+  'ends_with',
+  'is_empty',
+  'is_not_empty',
 ]
-const EQUALITY_OPERATOR_ALIASES = { 'select_equals': 'equal', 'select_not_equals': 'not_equal' }
+const EQUALITY_OPERATOR_ALIASES = {
+  select_equals: 'equal',
+  select_not_equals: 'not_equal',
+}
 const readOperatorValue = (operator) => operator?.value || operator
 
 const projectConditionValueType = (field) => {
@@ -69,7 +86,24 @@ const projectConditionValueType = (field) => {
   const valueType = field.valueType.trim().toLowerCase()
   let type = 'text'
   let operators = EQUALITY_OPERATORS
-  if (['short', 'integer', 'long', 'float', 'double', 'decimal', 'number'].includes(valueType)) {
+  if (
+    field.type === 'select' ||
+    (Array.isArray(field.options) && field.options.length > 0)
+  ) {
+    type = 'select'
+    operators = [
+      'select_equals',
+      'select_not_equals',
+      'select_any_in',
+      'select_not_any_in',
+      'is_empty',
+      'is_not_empty',
+    ]
+  } else if (
+    ['short', 'integer', 'long', 'float', 'double', 'decimal', 'number'].includes(
+      valueType
+    )
+  ) {
     type = 'number'
     operators = ORDERED_OPERATORS
   } else if (['date', 'time', 'datetime'].includes(valueType)) {
@@ -84,14 +118,19 @@ const projectConditionValueType = (field) => {
   const allowedOperators = Array.isArray(field.operators)
     ? field.operators.filter((operator) => {
         const value = readOperatorValue(operator)
-        return operators.includes(EQUALITY_OPERATOR_ALIASES[value] || value)
+        return (
+          operators.includes(value) ||
+          operators.includes(EQUALITY_OPERATOR_ALIASES[value] || value)
+        )
       })
     : [...operators]
   const operatorValues = allowedOperators.map(readOperatorValue)
   return {
     type,
     operators: allowedOperators,
-    defaultOp: operatorValues.includes(field.defaultOp) ? field.defaultOp : operatorValues[0],
+    defaultOp: operatorValues.includes(field.defaultOp)
+      ? field.defaultOp
+      : operatorValues[0],
   }
 }
 
@@ -137,7 +176,9 @@ const normalizeWorkflowConditionField = (field) => {
 
 export const normalizeWorkflowConditionFieldSource = (conditionFieldSource) => {
   if (Array.isArray(conditionFieldSource)) {
-    const fields = conditionFieldSource.map(normalizeWorkflowConditionField).filter(Boolean)
+    const fields = conditionFieldSource
+      .map(normalizeWorkflowConditionField)
+      .filter(Boolean)
     return {
       sourceKind: 'definition-bound-form',
       revisionToken: `${fields.length}`,
@@ -161,9 +202,7 @@ export const normalizeWorkflowConditionFieldSource = (conditionFieldSource) => {
     sourceKind: conditionFieldSource.sourceKind || 'definition-bound-form',
     revisionToken:
       conditionFieldSource.revisionToken ||
-      `${conditionFieldSource.sourceKind || 'definition-bound-form'}:${
-        fields.length
-      }`,
+      `${conditionFieldSource.sourceKind || 'definition-bound-form'}:${fields.length}`,
     fields,
   }
 }
@@ -184,10 +223,7 @@ const normalizeSelectionIds = (ids) => {
   )
 }
 
-export const createWorkflowSelectionSnapshot = ({
-  nodeIds = [],
-  edgeIds = [],
-} = {}) => {
+export const createWorkflowSelectionSnapshot = ({ nodeIds = [], edgeIds = [] } = {}) => {
   const normalizedNodeIds = normalizeSelectionIds(nodeIds)
   const normalizedEdgeIds = normalizeSelectionIds(edgeIds)
   const selectionSize = normalizedNodeIds.length + normalizedEdgeIds.length
@@ -326,9 +362,12 @@ export const buildWorkflowEditorCommandStates = ({
 } = {}) => {
   const normalizedSelection = normalizeWorkflowSelectionSnapshot(selection)
   const allowViewportCommands = coreCapabilities?.allowViewportCommands !== false
-  const allowDeleteSelection = !readonly && coreCapabilities?.allowDeleteSelection !== false
+  const allowDeleteSelection =
+    !readonly && coreCapabilities?.allowDeleteSelection !== false
   const allowHistoryCommands =
-    !readonly && coreCapabilities?.allowHistoryCommands === true && history?.available === true
+    !readonly &&
+    coreCapabilities?.allowHistoryCommands === true &&
+    history?.available === true
   const hasViewport = Number.isFinite(Number(viewport?.zoom))
   const hasSelection =
     normalizedSelection.mode !== 'none' &&
@@ -355,7 +394,9 @@ export const buildWorkflowEditorCommandStates = ({
           enabled: allowHistoryCommands && history?.canUndo === true,
           tooltip: undoTooltip,
           disabledReason:
-            history?.available === true ? '当前没有可撤销的操作' : '当前版本尚未接入撤销历史',
+            history?.available === true
+              ? '当前没有可撤销的操作'
+              : '当前版本尚未接入撤销历史',
         })
       case WORKFLOW_EDITOR_COMMAND_IDS.REDO:
         return createWorkflowEditorCommandState({
@@ -364,7 +405,9 @@ export const buildWorkflowEditorCommandStates = ({
           enabled: allowHistoryCommands && history?.canRedo === true,
           tooltip: redoTooltip,
           disabledReason:
-            history?.available === true ? '当前没有可重做的操作' : '当前版本尚未接入重做历史',
+            history?.available === true
+              ? '当前没有可重做的操作'
+              : '当前版本尚未接入重做历史',
         })
       case WORKFLOW_EDITOR_COMMAND_IDS.ZOOM_IN:
       case WORKFLOW_EDITOR_COMMAND_IDS.ZOOM_OUT:

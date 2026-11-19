@@ -71,8 +71,7 @@ export const normalizeWorkflowCandidateSource = (candidateSource) => {
 
   return {
     ...candidateSource,
-    revisionToken:
-      candidateSource.revisionToken || `candidate:${items.length}`,
+    revisionToken: candidateSource.revisionToken || `candidate:${items.length}`,
     items,
   }
 }
@@ -162,10 +161,7 @@ const normalizeDerivedPermissionField = (field) => {
   }
 }
 
-const CANDIDATE_FIELD_TYPES = new Set([
-  '员工',
-  '多员工',
-])
+const CANDIDATE_FIELD_TYPES = new Set(['员工', '多员工'])
 
 const normalizeFormFieldUsage = (usage) =>
   typeof usage === 'string' ? usage.trim().toLowerCase() : ''
@@ -206,8 +202,24 @@ const isConditionFormField = (field) => {
   }
 
   const types = readFormFieldTypes(field).map((type) => type.toLowerCase())
-  return types.length === 0 || types.some((type) =>
-    ['text', 'string', 'number', 'integer', 'decimal', 'date', 'datetime', 'time', 'boolean', 'bool', 'enum', 'select'].includes(type)
+  return (
+    types.length === 0 ||
+    types.some((type) =>
+      [
+        'text',
+        'string',
+        'number',
+        'integer',
+        'decimal',
+        'date',
+        'datetime',
+        'time',
+        'boolean',
+        'bool',
+        'enum',
+        'select',
+      ].includes(type)
+    )
   )
 }
 
@@ -342,7 +354,7 @@ export const resolveWorkflowSourceApi = async ({
   }
 
   const result = await env.fetcher(resolvedSourceApi)
-  const payload = unwrapFetcherResultData(result)
+  const payload = unwrapFetcherResultData(result, { throwOnFailure: true })
   return normalize(payload)
 }
 
@@ -365,8 +377,9 @@ export const normalizeWorkflowCandidateSourceFromApi = async ({
   sourceApi = null,
   data = null,
 } = {}) => {
-  const candidateListSourceApi =
-    isWorkflowSourceApiRequest(sourceApi) ? sourceApi : sourceApi?.list || null
+  const candidateListSourceApi = isWorkflowSourceApiRequest(sourceApi)
+    ? sourceApi
+    : sourceApi?.list || null
   const candidateSource = await resolveWorkflowSourceApi({
     env,
     sourceApi: candidateListSourceApi,

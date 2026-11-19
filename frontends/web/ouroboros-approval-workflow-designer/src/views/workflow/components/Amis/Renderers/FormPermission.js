@@ -1,6 +1,7 @@
 import { t } from '../../../../../i18n.js'
 import { FormItem } from 'ouroboros-sdk'
 import React from 'react'
+import { isEqual } from 'lodash'
 import {
   mergeWorkflowFormPermissionRows,
   normalizeWorkflowFormPermissionItem,
@@ -19,6 +20,15 @@ class FormPermission extends React.Component {
   componentDidMount() {
     this.fetchPermissionList()
   }
+  componentDidUpdate(previousProps) {
+    if (
+      !isEqual(previousProps.options, this.props.options) ||
+      !isEqual(previousProps.value, this.props.value)
+    ) {
+      this.fetchPermissionList()
+    }
+  }
+
   async fetchPermissionList() {
     const { value } = this.props
     const formList = mergeWorkflowFormPermissionRows(this.props.options, value)
@@ -94,8 +104,35 @@ class FormPermission extends React.Component {
   render() {
     const { classnames: cx } = this.props
     const { formList = [] } = this.state
+    const fieldNames = new Set(
+      (this.props.options || []).map(resolveWorkflowFormPermissionFieldKey)
+    )
+    const missingFields = normalizeWorkflowFormPermissionValues(this.props.value).filter(
+      (item) => !fieldNames.has(item.name)
+    )
     const node = (
       <div>
+        {missingFields.length > 0 ? (
+          <div role="alert" className={cx('Alert', 'Alert--warning')}>
+            {t('以下字段已不在当前表单中：')}
+            {missingFields.map((item) => item.name).join('、')}
+            {!this.props.static ? (
+              <button
+                type="button"
+                className={cx('Button', 'Button--link')}
+                onClick={() =>
+                  this.props.onChange?.(
+                    normalizeWorkflowFormPermissionValues(this.props.value).filter(
+                      (item) => fieldNames.has(item.name)
+                    )
+                  )
+                }
+              >
+                {t('移除失效配置')}
+              </button>
+            ) : null}
+          </div>
+        ) : null}
         <table className={cx('Table-table')}>
           <thead>
             <tr>

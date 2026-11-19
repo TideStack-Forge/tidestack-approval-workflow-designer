@@ -1,3 +1,5 @@
+import devEditPage from '../../../../../../../core/ouroboros-approval-workflow/ouroboros-approval-workflow-dev/src/main/metadata/dev/{appName}/approval-workflow-definition/{id}.ui-schema.json'
+
 import {
   v1DefinitionFixture,
   v2DefinitionFixture,
@@ -38,14 +40,14 @@ const createBasicInfoFormItems = () => [
   {
     type: 'select',
     name: 'formId',
-    label: '表单标识',
+    label: '关联表单',
     source: {
       method: 'get',
-      url: '/api/dev/${appName}/business-model/list',
+      url: '/api/dev/${appName}/approval-workflow/base-info/form/${formType}',
       cache: 2000,
     },
     labelField: 'title',
-    valueField: 'fullName',
+    valueField: 'name',
     searchable: true,
     clearable: true,
   },
@@ -111,7 +113,7 @@ const createDefinitionBoundWorkflowFieldSourceApi = () => ({
 
 const createBusinessModelWorkflowFieldSourceApi = () => ({
   method: 'get',
-  url: '/api/dev/${appName}/business-model-helper/approval-workflow-fields',
+  url: '/api/dev/${appName}/approval-workflow/base-info/workflow-field',
   data: {
     formType: '${flowDefinition.form.formType}',
     formKey: '${flowDefinition.form.formId}',
@@ -159,8 +161,15 @@ const createFieldResponse = (items) => ({
   },
 })
 
-const createBusinessModelWorkflowFieldsResponse = ({ formKey = '', formTitle = '', fields = [] } = {}) => {
-  const normalizedFields = (fields || []).map((field) => ({ ...field, value: field.name }))
+const createBusinessModelWorkflowFieldsResponse = ({
+  formKey = '',
+  formTitle = '',
+  fields = [],
+} = {}) => {
+  const normalizedFields = (fields || []).map((field) => ({
+    ...field,
+    value: field.name,
+  }))
   const normalizedFormKey = typeof formKey === 'string' ? formKey : ''
 
   return {
@@ -177,7 +186,8 @@ const createBusinessModelWorkflowFieldsResponse = ({ formKey = '', formTitle = '
               formTitle,
             }
           : null,
-      boundFormSummary: normalizedFormKey && formTitle ? `${formTitle}（${normalizedFormKey}）` : '',
+      boundFormSummary:
+        normalizedFormKey && formTitle ? `${formTitle}（${normalizedFormKey}）` : '',
     },
   }
 }
@@ -203,6 +213,15 @@ const createBusinessModelWorkflowFieldsResolver = (modelEntries = {}) => {
 }
 
 const createCommonCandidateFetcherResponses = () => ({
+  '/api/dev/workflow-harness/approval-workflow/base-info/form/business-model': {
+    status: 0,
+    data: {
+      items: [
+        { name: 'demo.order', title: '订单' },
+        { name: 'demo.invoice', title: '发票' },
+      ],
+    },
+  },
   '/api/approval-workflow/candidate': createCandidateListResponse(),
 })
 
@@ -317,14 +336,15 @@ export const harnessScenarios = {
     ...createDefinitionManagementPageConfig(),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/default/purchase/workflow-field': createFieldResponse([
-        {
-          label: '申请金额',
-          value: 'amount',
-          type: 'number',
-          usages: ['condition', 'permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/default/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '申请金额',
+            value: 'amount',
+            type: 'number',
+            usages: ['condition', 'permission'],
+          },
+        ]),
     },
   },
   'v2-editable': {
@@ -334,20 +354,21 @@ export const harnessScenarios = {
     ...createBasicInfoEntryContract(),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          type: 'number',
-          usages: ['condition', 'permission'],
-        },
-        {
-          label: '申请部门',
-          value: 'department',
-          type: 'text',
-          usages: ['condition', 'permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            type: 'number',
+            usages: ['condition', 'permission'],
+          },
+          {
+            label: '申请部门',
+            value: 'department',
+            type: 'text',
+            usages: ['condition', 'permission'],
+          },
+        ]),
     },
   },
   'history-editable': {
@@ -360,14 +381,15 @@ export const harnessScenarios = {
     },
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          type: 'number',
-          usages: ['condition', 'permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            type: 'number',
+            usages: ['condition', 'permission'],
+          },
+        ]),
     },
   },
   'branch-editable': {
@@ -376,22 +398,23 @@ export const harnessScenarios = {
     ...createDefinitionManagementPageConfig(),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/default/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          type: '货币',
-          valueType: 'Decimal',
-          usages: ['condition', 'permission'],
-        },
-        {
-          label: '申请部门',
-          value: 'department',
-          type: 'select',
-          usages: ['condition', 'permission'],
-          options: [{ label: '兜底', value: 'fallback' }],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/default/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            type: '货币',
+            valueType: 'Decimal',
+            usages: ['condition', 'permission'],
+          },
+          {
+            label: '申请部门',
+            value: 'department',
+            type: 'select',
+            usages: ['condition', 'permission'],
+            options: [{ label: '兜底', value: 'fallback' }],
+          },
+        ]),
     },
   },
   'v2-edge-diagnostic': {
@@ -400,14 +423,15 @@ export const harnessScenarios = {
     ...createDefinitionManagementPageConfig(),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          type: 'number',
-          usages: ['condition', 'permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            type: 'number',
+            usages: ['condition', 'permission'],
+          },
+        ]),
     },
   },
   'branch-missing-condition-source': {
@@ -419,13 +443,14 @@ export const harnessScenarios = {
     candidateSourceApi: createCandidateSourceApi(),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/default/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          usages: ['permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/default/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            usages: ['permission'],
+          },
+        ]),
     },
   },
   'remote-v2-source': {
@@ -445,14 +470,15 @@ export const harnessScenarios = {
           id: 'remote-flow',
         },
       },
-      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          type: 'number',
-          usages: ['condition', 'permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            type: 'number',
+            usages: ['condition', 'permission'],
+          },
+        ]),
     },
   },
   'new-flow': {
@@ -469,7 +495,7 @@ export const harnessScenarios = {
     ...createBasicInfoEntryContract(),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/dev/workflow-harness/business-model-helper/approval-workflow-fields':
+      '/api/dev/workflow-harness/approval-workflow/base-info/workflow-field':
         createBusinessModelWorkflowFieldsResolver(businessModelWorkflowFieldModels),
     },
   },
@@ -486,7 +512,7 @@ export const harnessScenarios = {
     ...createBasicInfoEntryContract(),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/dev/workflow-harness/business-model-helper/approval-workflow-fields':
+      '/api/dev/workflow-harness/approval-workflow/base-info/workflow-field':
         createBusinessModelWorkflowFieldsResolver(businessModelWorkflowFieldModels),
     },
   },
@@ -500,13 +526,14 @@ export const harnessScenarios = {
     ...createBasicInfoEntryContract(),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          usages: ['condition', 'permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            usages: ['condition', 'permission'],
+          },
+        ]),
     },
   },
   'workflow-viewer': {
@@ -524,14 +551,15 @@ export const harnessScenarios = {
     }),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          type: 'number',
-          usages: ['condition', 'permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            type: 'number',
+            usages: ['condition', 'permission'],
+          },
+        ]),
     },
   },
   'basic-info-drawer': {
@@ -543,16 +571,104 @@ export const harnessScenarios = {
     }),
     fetcherResponses: {
       ...createCommonCandidateFetcherResponses(),
-      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field': createFieldResponse([
-        {
-          label: '金额',
-          value: 'amount',
-          type: 'number',
-          usages: ['condition', 'permission'],
-        },
-      ]),
+      '/api/approval-workflow/base-info/form/customForm/purchase/workflow-field':
+        createFieldResponse([
+          {
+            label: '金额',
+            value: 'amount',
+            type: 'number',
+            usages: ['condition', 'permission'],
+          },
+        ]),
     },
   },
+}
+
+const findWorkflowEditor = (value) => {
+  if (!value || typeof value !== 'object') return null
+  if (value.type === 'workflow-editor') return value
+  for (const child of Object.values(value)) {
+    const found = findWorkflowEditor(child)
+    if (found) return found
+  }
+  return null
+}
+const productionEditor = findWorkflowEditor(devEditPage)
+const customDefinition = cloneFixture(v2BranchDefinitionFixture)
+customDefinition.formType = 'custom'
+customDefinition.formKey = 'purchase'
+const customFields = [
+  {
+    name: 'amount',
+    label: '采购金额',
+    type: 'input-number',
+    fieldType: '定点数字',
+    valueType: 'Decimal',
+    description: '金额含税',
+    operators: ['greater', 'equal', 'between'],
+    usages: ['condition', 'permission'],
+  },
+  {
+    name: 'purchaseType',
+    label: '采购类型',
+    type: 'select',
+    fieldType: '单选',
+    valueType: 'String',
+    options: [
+      { value: 'equipment', label: '设备' },
+      { value: 'service', label: '服务' },
+    ],
+    operators: ['select_equals', 'select_not_equals'],
+    usages: ['condition', 'permission'],
+  },
+]
+const customResponses = {
+  ...createCommonCandidateFetcherResponses(),
+  '/api/dev/workflow-harness/approval-workflow/base-info/form-types': {
+    status: 0,
+    data: {
+      items: [
+        { value: 'business-model', label: '业务模型' },
+        { value: 'custom', label: '自定义表单' },
+      ],
+    },
+  },
+  '/api/dev/workflow-harness/approval-workflow/base-info/form/custom': {
+    status: 0,
+    data: {
+      items: [
+        { name: 'purchase', title: '采购申请' },
+        { name: 'expense', title: '费用报销' },
+      ],
+    },
+  },
+  '/api/dev/workflow-harness/approval-workflow/base-info/workflow-field': async (
+    request
+  ) => {
+    const key = request.data?.formKey
+    if (key === 'slow') await new Promise((resolve) => setTimeout(resolve, 1000))
+    if (key === 'missing') return { status: -1, msg: '自定义审批表单不存在' }
+    return {
+      status: 0,
+      data: {
+        sourceKind: 'form-fields',
+        revisionToken: `custom:${key}`,
+        fields:
+          key === 'empty'
+            ? []
+            : key === 'expense'
+              ? [{ ...customFields[0], name: 'expenseAmount', label: '报销金额' }]
+              : customFields,
+      },
+    }
+  },
+}
+harnessScenarios['custom-form'] = {
+  definition: customDefinition,
+  flowKey: customDefinition.id,
+  ...createDefaultFlowDesignPageConfig(),
+  basicInfoFormItems: productionEditor.basicInfoFormItems,
+  fetcherResponses: customResponses,
 }
 
 export function resolveScenario(name) {

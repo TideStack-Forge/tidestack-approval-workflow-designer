@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useRef } from 'react'
 import { renderAmisSchema } from 'ouroboros-sdk'
+import {
+  applyAmisValueProjection,
+  readAmisFormValues,
+} from './workflowInspectorAmisSession.js'
 
 const cloneSchema = (schema) => {
   if (Array.isArray(schema)) {
@@ -99,6 +103,15 @@ const WorkflowToolbarSchemaEntry = ({
           entry?.env || {}
         )
       }
+      const projection = entry?.formValueProjection
+      const currentValues = projection && readAmisFormValues(handle, projection.formName)
+      if (currentValues) {
+        applyAmisValueProjection({
+          renderHandle: handle,
+          formName: projection.formName,
+          valueProjection: { values: { ...currentValues, ...projection.values } },
+        })
+      }
     }
 
     void renderEntry()
@@ -106,7 +119,7 @@ const WorkflowToolbarSchemaEntry = ({
     return () => {
       disposed = true
     }
-  }, [entry?.env, entry?.key, entry?.props, schema])
+  }, [entry?.env, entry?.key, entry?.props, entry?.formValueProjection, schema])
 
   if (!entry?.key || !schema) {
     return null

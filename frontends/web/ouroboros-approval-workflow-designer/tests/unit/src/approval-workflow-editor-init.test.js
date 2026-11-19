@@ -23,12 +23,8 @@ require('@babel/register')({
 const {
   ApprovalWorkFlowEditor,
 } = require('../../../src/editor-core/ApprovalWorkFlowEditor.jsx')
-const {
-  EditorSession,
-} = require('../../../src/editor-session/index.js')
-const {
-  v2DefinitionFixture,
-} = require('../../integration/workflow/harness/fixtures.js')
+const { EditorSession } = require('../../../src/editor-session/index.js')
+const { v2DefinitionFixture } = require('../../integration/workflow/harness/fixtures.js')
 
 const cloneFixture = (fixture) => JSON.parse(JSON.stringify(fixture))
 
@@ -75,7 +71,10 @@ test('initFlowDefinition still synchronizes external sources when preloaded valu
   await editor.initFlowDefinition()
 
   assert.strictEqual(syncCalls, 1)
-  assert.ok(editor.state.session, 'session should still be hydrated from the loaded definition')
+  assert.ok(
+    editor.state.session,
+    'session should still be hydrated from the loaded definition'
+  )
   assert.strictEqual(editor.state.value.form.formId, 'a')
   assert.strictEqual(editor.state.sourceFormatVersion, 2)
 })
@@ -133,7 +132,10 @@ test('initFlowDefinition synchronizes external sources with the freshly loaded d
 
   await editor.initFlowDefinition()
 
-  assert.deepStrictEqual(fetchCalls.map((request) => request?.data?.formKey), ['demo.invoice'])
+  assert.deepStrictEqual(
+    fetchCalls.map((request) => request?.data?.formKey),
+    ['demo.invoice']
+  )
   assert.strictEqual(editor.state.value.form.formId, 'demo.invoice')
 })
 
@@ -193,7 +195,10 @@ test('AMIS static mode drives the editor readonly state', () => {
 
   assert.strictEqual(editor.isReadonly(), false)
   assert.strictEqual(editor.isReadonly({ ...editor.props, static: true }), true)
-  assert.strictEqual(editor.isReadonly({ ...editor.props, data: { mode: 'preview' } }), true)
+  assert.strictEqual(
+    editor.isReadonly({ ...editor.props, data: { mode: 'preview' } }),
+    true
+  )
   assert.strictEqual(
     editor.shouldComponentUpdate({ ...editor.props, static: true }, editor.state),
     true
@@ -253,8 +258,18 @@ test('syncExternalSources keeps the latest field source when older requests reso
           return buildFieldsResponse(
             formKey,
             [
-              { name: 'invoiceAmount', label: '发票金额', value: 'invoiceAmount', type: 'number' },
-              { name: 'invoiceDepartment', label: '开票部门', value: 'invoiceDepartment', type: 'text' },
+              {
+                name: 'invoiceAmount',
+                label: '发票金额',
+                value: 'invoiceAmount',
+                type: 'number',
+              },
+              {
+                name: 'invoiceDepartment',
+                label: '开票部门',
+                value: 'invoiceDepartment',
+                type: 'text',
+              },
             ],
             '发票'
           )
@@ -282,6 +297,9 @@ test('syncExternalSources keeps the latest field source when older requests reso
   session.updateWorkflowMeta({ formKey: 'demo.invoice' }, { recordHistory: false })
   editor.state.value = session.getDefinition()
   const latestSyncPromise = editor.syncExternalSources()
+  assert.strictEqual(editor.state.fieldSourceStatus, 'loading')
+  assert.deepStrictEqual(editor.state.formPermissionFieldSource.fields, [])
+  assert.deepStrictEqual(editor.state.conditionFieldSource.fields, [])
 
   await Promise.all([staleSyncPromise, latestSyncPromise])
 
@@ -293,6 +311,7 @@ test('syncExternalSources keeps the latest field source when older requests reso
     editor.state.conditionFieldSource.fields.map((field) => field.value),
     ['invoiceAmount', 'invoiceDepartment']
   )
+  assert.strictEqual(editor.state.fieldSourceStatus, 'ready')
   assert.strictEqual(editor.state.basicInfoData?.boundForm?.formKey, 'demo.invoice')
   assert(fetchCalls.some((request) => request?.data?.formKey === 'demo.order'))
   assert(fetchCalls.some((request) => request?.data?.formKey === 'demo.invoice'))
@@ -385,6 +404,7 @@ test('syncExternalSources clears stale field source when the latest binding refr
   assert.deepStrictEqual(editor.state.formPermissionFieldSource.fields, [])
   assert.deepStrictEqual(editor.state.conditionFieldSource.fields, [])
   assert.deepStrictEqual(editor.state.basicInfoData, {})
+  assert.strictEqual(editor.state.fieldSourceStatus, 'error')
   assert.deepStrictEqual(notifications, [
     {
       type: 'warning',
@@ -448,7 +468,8 @@ test('handleBasicInfoSubmit refreshes field sources from the selected business m
             boundForm: {
               formType: 'business-model',
               formKey,
-              formTitle: formKey === 'qaApprovalFieldSource' ? 'QA审批字段源' : '默认模型',
+              formTitle:
+                formKey === 'qaApprovalFieldSource' ? 'QA审批字段源' : '默认模型',
             },
             boundFormSummary:
               formKey === 'qaApprovalFieldSource'
@@ -494,5 +515,8 @@ test('handleBasicInfoSubmit refreshes field sources from the selected business m
     editor.state.conditionFieldSource.fields.map((field) => field.label),
     ['QA ID', 'QA姓名', 'QA状态']
   )
-  assert.strictEqual(editor.state.basicInfoData?.boundForm?.formKey, 'qaApprovalFieldSource')
+  assert.strictEqual(
+    editor.state.basicInfoData?.boundForm?.formKey,
+    'qaApprovalFieldSource'
+  )
 })

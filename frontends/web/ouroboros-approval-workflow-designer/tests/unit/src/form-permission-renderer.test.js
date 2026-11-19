@@ -211,3 +211,32 @@ test('form permission renderer writes value-only field edits with canonical name
     },
   ])
 })
+
+test('field source refresh updates visible rows while preserving saved missing permissions on edits', () => {
+  let emitted
+  const previous = {
+    options: [{ name: 'amount', label: '采购金额' }],
+    value: [{ name: 'amount', writable: true }],
+  }
+  const renderer = new registeredComponent(previous)
+  renderer.setState = (state) => {
+    renderer.state = { ...renderer.state, ...state }
+  }
+  renderer.componentDidMount()
+  const next = {
+    options: [{ name: 'expense', label: '报销金额' }],
+    value: previous.value,
+    onChange: (value) => {
+      emitted = value
+    },
+  }
+  renderer.props = next
+  renderer.componentDidUpdate(previous)
+  assert.deepEqual(
+    renderer.state.formList.map((item) => item.name),
+    ['expense']
+  )
+  renderer.handleCheckboxChange('writable', true, renderer.state.formList[0])
+  assert.equal(emitted.find((item) => item.name === 'amount').writable, true)
+  assert.equal(emitted.find((item) => item.name === 'expense').writable, true)
+})

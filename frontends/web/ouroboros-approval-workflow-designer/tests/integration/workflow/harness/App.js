@@ -89,7 +89,8 @@ function createHarnessI18n() {
   let locale = 'zh-CN'
   let messages = {}
   const listeners = new Set()
-  const translate = (namespace, key, fallback) => messages[namespace]?.[key] || fallback || key
+  const translate = (namespace, key, fallback) =>
+    messages[namespace]?.[key] || fallback || key
   return {
     getLocale: () => locale,
     getLanguages: () => [],
@@ -102,7 +103,8 @@ function createHarnessI18n() {
     tn: translate,
     tMenu: (key, defaultText) => translate('menu', key, defaultText),
     tCommon: (key, defaultText) => translate('common', key, defaultText),
-    useNamespace: (namespace) => (key, defaultText) => translate(namespace, key, defaultText),
+    useNamespace: (namespace) => (key, defaultText) =>
+      translate(namespace, key, defaultText),
     getLocaleData: () => ({ locale, messages }),
     onLocaleChange: (listener) => {
       listeners.add(listener)
@@ -209,14 +211,18 @@ function createScenarioState() {
 }
 
 function captureReactFlowContractSnapshot() {
-  const shellPanels = Array.from(document.querySelectorAll('[data-testid^="workflow-panel-"]'))
+  const shellPanels = Array.from(
+    document.querySelectorAll('[data-testid^="workflow-panel-"]')
+  )
   const paletteItems = Array.from(
     document.querySelectorAll('[data-testid="workflow-node-palette-item"]')
   )
   const paletteNodeTypes = paletteItems
     .map((item) => item.getAttribute('data-node-type') || '')
     .filter(Boolean)
-  const lowerCasePaletteNodeTypes = paletteNodeTypes.map((nodeType) => nodeType.toLowerCase())
+  const lowerCasePaletteNodeTypes = paletteNodeTypes.map((nodeType) =>
+    nodeType.toLowerCase()
+  )
 
   return {
     hasThreePanelShell:
@@ -229,7 +235,8 @@ function captureReactFlowContractSnapshot() {
     paletteIncludesCondition: lowerCasePaletteNodeTypes.includes('condition'),
     hasConditionPseudoNodeInCanvas:
       document.querySelector('[data-testid="reactflow-node-condition"]') !== null,
-    hasEndNodeInCanvas: document.querySelector('[data-testid="reactflow-node-end"]') !== null,
+    hasEndNodeInCanvas:
+      document.querySelector('[data-testid="reactflow-node-end"]') !== null,
     hasGridBackground:
       document.querySelector('.react-flow__background') !== null ||
       document.querySelector('.react-flow__background-pattern') !== null,
@@ -242,12 +249,15 @@ function HarnessApp() {
   const [scenarioState, setScenarioState] = useState(() => createScenarioState())
   const { scenarioName, scenario } = scenarioState
   const [value, setValue] = useState(scenario.definition)
+  const [editorGeneration, setEditorGeneration] = useState(0)
   const [notifications, setNotifications] = useState([])
   const [fetcherCalls, setFetcherCalls] = useState([])
   const [savedDefinitions, setSavedDefinitions] = useState([])
   const [drawerRequests, setDrawerRequests] = useState([])
   const [publishedDefinitions, setPublishedDefinitions] = useState([])
-  const [runtimeCoreCapabilities, setRuntimeCoreCapabilities] = useState(scenario.coreCapabilities)
+  const [runtimeCoreCapabilities, setRuntimeCoreCapabilities] = useState(
+    scenario.coreCapabilities
+  )
   const [harnessDiagnosticsSnapshot, setHarnessDiagnosticsSnapshot] = useState({
     status: 'clean',
     items: [],
@@ -407,18 +417,40 @@ function HarnessApp() {
 
     window.__APPROVAL_WORKFLOW_HARNESS__ = {
       switchLanguage: harnessI18n.switchLanguage,
+      reloadDefinition: async (definition) => {
+        mock.reset({
+          fetcherResponses: {
+            ...scenario.fetcherResponses,
+            [`/api/approval-workflow/definition/${scenario.flowKey}`]: {
+              status: 0,
+              data: definition,
+            },
+          },
+        })
+        setValue(definition)
+        setEditorGeneration((generation) => generation + 1)
+        await waitForRender()
+      },
       addNode: async (targetNodeId, nodeData) =>
         mutateSession((session) => session.addNode(targetNodeId, nodeData)),
       addBranch: async (branchNodeId) =>
         mutateSession((session) => session.addBranch(branchNodeId)),
       deleteNodeViaDesigner: async (nodeId) =>
-        withWorkflowDesigner((workflowDesigner) => workflowDesigner.deleteNodeHandler({ id: nodeId })),
+        withWorkflowDesigner((workflowDesigner) =>
+          workflowDesigner.deleteNodeHandler({ id: nodeId })
+        ),
       selectNode: async (nodeId) =>
-        withWorkflowDesigner((workflowDesigner) => workflowDesigner.nodeSelectedHandler({ id: nodeId })),
+        withWorkflowDesigner((workflowDesigner) =>
+          workflowDesigner.nodeSelectedHandler({ id: nodeId })
+        ),
       openNodeConfigViaDesigner: async (nodeId) =>
-        withWorkflowDesigner((workflowDesigner) => workflowDesigner.nodeSelectedHandler({ id: nodeId })),
+        withWorkflowDesigner((workflowDesigner) =>
+          workflowDesigner.nodeSelectedHandler({ id: nodeId })
+        ),
       selectEdge: async (edgeId) =>
-        withWorkflowDesigner((workflowDesigner) => workflowDesigner.edgeSelectedHandler({ id: edgeId })),
+        withWorkflowDesigner((workflowDesigner) =>
+          workflowDesigner.edgeSelectedHandler({ id: edgeId })
+        ),
       applySelectionSnapshot: async (selectionSnapshot) =>
         withWorkflowDesigner((workflowDesigner) =>
           workflowDesigner.applySelectionSnapshot(selectionSnapshot)
@@ -468,7 +500,9 @@ function HarnessApp() {
       readLastSavedDefinition: () =>
         savedDefinitions.length ? savedDefinitions[savedDefinitions.length - 1] : null,
       readLastPublishedDefinition: () =>
-        publishedDefinitions.length ? publishedDefinitions[publishedDefinitions.length - 1] : null,
+        publishedDefinitions.length
+          ? publishedDefinitions[publishedDefinitions.length - 1]
+          : null,
       readLastDrawerRequest: () =>
         drawerRequests.length ? drawerRequests[drawerRequests.length - 1] : null,
       readDiagnosticsSnapshot: () => harnessDiagnosticsSnapshot,
@@ -554,7 +588,8 @@ function HarnessApp() {
         padding: 24,
         boxSizing: 'border-box',
         fontFamily: 'sans-serif',
-      }}>
+      }}
+    >
       <div>Approval workflow harness shell</div>
       <div
         data-testid="workflow-page-actions"
@@ -562,7 +597,8 @@ function HarnessApp() {
           display: 'flex',
           gap: 8,
           alignItems: 'center',
-        }}>
+        }}
+      >
         {scenario.outerPageActions?.allowReturnNavigation ? (
           <button type="button">返回</button>
         ) : null}
@@ -580,7 +616,7 @@ function HarnessApp() {
       <div style={{ flex: 1, minHeight: 0, border: '1px solid #d9d9d9' }}>
         {ready ? (
           <ApprovalWorkFlowEditor
-            key={scenarioName}
+            key={`${scenarioName}:${editorGeneration}`}
             ref={editorRef}
             data={{
               appName: scenario.appName || 'workflow-harness',
@@ -618,72 +654,143 @@ function HarnessApp() {
           <div style={{ padding: 16 }}>Loading workflow editor...</div>
         )}
       </div>
-      <details style={{ marginTop: 12, border: '1px solid #d9d9d9', borderRadius: 4, padding: 8 }}>
+      <details
+        style={{
+          marginTop: 12,
+          border: '1px solid #d9d9d9',
+          borderRadius: 4,
+          padding: 8,
+        }}
+      >
         <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: 8 }}>
           Debug Information (Click to expand)
         </summary>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <details>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Current Definition</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Current Definition
+            </summary>
             <pre
               data-testid="current-definition"
-              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
+              style={{
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontSize: 12,
+              }}
+            >
               {currentDefinition}
             </pre>
           </details>
           <details>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Notifications</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Notifications
+            </summary>
             <pre
               data-testid="notifications"
-              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
+              style={{
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontSize: 12,
+              }}
+            >
               {JSON.stringify(notifications)}
             </pre>
           </details>
           <details>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Current Canvas Data</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Current Canvas Data
+            </summary>
             <pre
               data-testid="current-canvas-data"
-              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
+              style={{
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontSize: 12,
+              }}
+            >
               {currentCanvasData}
             </pre>
           </details>
           <details>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Fetcher Calls</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Fetcher Calls
+            </summary>
             <pre
               data-testid="fetcher-calls"
-              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
+              style={{
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontSize: 12,
+              }}
+            >
               {JSON.stringify(fetcherCalls)}
             </pre>
           </details>
           <details>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Last Saved Definition</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Last Saved Definition
+            </summary>
             <pre
               data-testid="last-saved-definition"
-              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
+              style={{
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontSize: 12,
+              }}
+            >
               {lastSavedDefinition}
             </pre>
           </details>
           <details>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Editor Input Contract</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Editor Input Contract
+            </summary>
             <pre
               data-testid="editor-input-contract"
-              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
+              style={{
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontSize: 12,
+              }}
+            >
               {JSON.stringify(editorInputContract)}
             </pre>
           </details>
           <details>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Last Published Definition</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Last Published Definition
+            </summary>
             <pre
               data-testid="last-published-definition"
-              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
+              style={{
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontSize: 12,
+              }}
+            >
               {lastPublishedDefinition}
             </pre>
           </details>
           <details>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Last Drawer Request</summary>
+            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              Last Drawer Request
+            </summary>
             <pre
               data-testid="last-drawer-request"
-              style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 12 }}>
+              style={{
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                fontSize: 12,
+              }}
+            >
               {lastDrawerRequest}
             </pre>
           </details>

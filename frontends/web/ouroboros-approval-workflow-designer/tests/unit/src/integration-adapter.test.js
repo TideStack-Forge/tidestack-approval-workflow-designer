@@ -255,55 +255,56 @@ test('integration adapter resolves design-time workflow fields from current flow
 
 test('integration adapter keeps legacy condition and permission source APIs in separate field views', async () => {
   const fetchCalls = []
-  const fieldSources = await ApprovalWorkflowEditorIntegrationAdapter.resolveFormFieldSources({
-    props: {
-      conditionFieldSourceApi: {
-        method: 'get',
-        url: '/api/approval-workflow/base-info/form/${flowDefinition.formType}/${flowDefinition.formKey}/expression-variable',
+  const fieldSources =
+    await ApprovalWorkflowEditorIntegrationAdapter.resolveFormFieldSources({
+      props: {
+        conditionFieldSourceApi: {
+          method: 'get',
+          url: '/api/approval-workflow/base-info/form/${flowDefinition.formType}/${flowDefinition.formKey}/expression-variable',
+        },
+        formPermissionFieldSourceApi: {
+          method: 'get',
+          url: '/api/approval-workflow/base-info/form/${flowDefinition.formType}/${flowDefinition.formKey}/field',
+        },
       },
-      formPermissionFieldSourceApi: {
-        method: 'get',
-        url: '/api/approval-workflow/base-info/form/${flowDefinition.formType}/${flowDefinition.formKey}/field',
+      data: {
+        flowDefinition: {
+          formType: 'customForm',
+          formKey: 'purchase',
+        },
       },
-    },
-    data: {
-      flowDefinition: {
-        formType: 'customForm',
-        formKey: 'purchase',
-      },
-    },
-    env: {
-      fetcher: async (request) => {
-        fetchCalls.push(request)
-        if (request.url.endsWith('/expression-variable')) {
+      env: {
+        fetcher: async (request) => {
+          fetchCalls.push(request)
+          if (request.url.endsWith('/expression-variable')) {
+            return {
+              status: 0,
+              data: {
+                items: [
+                  {
+                    label: '金额',
+                    value: 'amount',
+                    type: 'number',
+                  },
+                ],
+              },
+            }
+          }
+
           return {
             status: 0,
             data: {
               items: [
                 {
-                  label: '金额',
-                  value: 'amount',
-                  type: 'number',
+                  label: '申请部门',
+                  value: 'department',
                 },
               ],
             },
           }
-        }
-
-        return {
-          status: 0,
-          data: {
-            items: [
-              {
-                label: '申请部门',
-                value: 'department',
-              },
-            ],
-          },
-        }
+        },
       },
-    },
-  })
+    })
 
   assert.deepStrictEqual(fetchCalls, [
     {
@@ -338,52 +339,53 @@ test('integration adapter resolves unified form field source into all field view
     },
     cache: 3000,
   }
-  const fieldSources = await ApprovalWorkflowEditorIntegrationAdapter.resolveFormFieldSources({
-    props: {
-      formFieldSourceApi: sourceApi,
-    },
-    data: {
-      appName: 'crm',
-      flowDefinition: {
-        name: 'order-approval',
-        form: {
-          formType: 'business-model',
-          formId: 'demo.order',
+  const fieldSources =
+    await ApprovalWorkflowEditorIntegrationAdapter.resolveFormFieldSources({
+      props: {
+        formFieldSourceApi: sourceApi,
+      },
+      data: {
+        appName: 'crm',
+        flowDefinition: {
+          name: 'order-approval',
+          form: {
+            formType: 'business-model',
+            formId: 'demo.order',
+          },
         },
       },
-    },
-    env: {
-      fetcher: async (request) => {
-        fetchCalls.push(request)
-        return {
-          status: 0,
-          data: {
-            sourceKind: 'form-fields',
-            revisionToken: 'form-fields:demo.order:3',
-            fields: [
-              {
-                name: 'managerId',
-                label: '直属主管',
-                type: '员工',
-                usages: ['candidate', 'permission'],
-              },
-              {
-                name: 'amount',
-                label: '金额',
-                type: 'number',
-                usages: ['condition', 'permission'],
-              },
-              {
-                name: 'createdAt',
-                label: '创建时间',
-                type: 'datetime',
-              },
-            ],
-          },
-        }
+      env: {
+        fetcher: async (request) => {
+          fetchCalls.push(request)
+          return {
+            status: 0,
+            data: {
+              sourceKind: 'form-fields',
+              revisionToken: 'form-fields:demo.order:3',
+              fields: [
+                {
+                  name: 'managerId',
+                  label: '直属主管',
+                  type: '员工',
+                  usages: ['candidate', 'permission'],
+                },
+                {
+                  name: 'amount',
+                  label: '金额',
+                  type: 'number',
+                  usages: ['condition', 'permission'],
+                },
+                {
+                  name: 'createdAt',
+                  label: '创建时间',
+                  type: 'datetime',
+                },
+              ],
+            },
+          }
+        },
       },
-    },
-  })
+    })
 
   assert.deepStrictEqual(fetchCalls, [
     {
@@ -412,31 +414,56 @@ test('integration adapter resolves unified form field source into all field view
 })
 
 test('integration adapter uses returned value types for business model condition fields', async () => {
-  const fieldSources = await ApprovalWorkflowEditorIntegrationAdapter.resolveFormFieldSources({
-    props: {
-      formFieldSourceApi: { method: 'get', url: '/api/dev/crm/business-model-helper/approval-workflow-fields' },
-    },
-    env: {
-      fetcher: async () => ({
-        status: 200,
-        data: {
-          code: 0,
-          data: {
-            sourceKind: 'form-fields',
-            fields: [
-              { name: 'amount', label: '金额', type: '自定义金额', valueType: 'Decimal' },
-              { name: 'quantity', label: '数量', type: '整数数字', valueType: 'Integer' },
-              { name: 'title', label: '标题', type: '单行文本', valueType: 'String' },
-              { name: 'date', label: '日期', type: '日期', valueType: 'Date' },
-              { name: 'status', label: '状态', type: '单选', valueType: 'String', options: [{ label: '通过', value: 'approved' }] },
-              { name: 'manager', label: '主管', type: '员工' },
-              { name: 'metadata', label: '附加信息', type: '自定义对象', valueType: 'Json' },
-            ],
-          },
+  const fieldSources =
+    await ApprovalWorkflowEditorIntegrationAdapter.resolveFormFieldSources({
+      props: {
+        formFieldSourceApi: {
+          method: 'get',
+          url: '/api/dev/crm/business-model-helper/approval-workflow-fields',
         },
-      }),
-    },
-  })
+      },
+      env: {
+        fetcher: async () => ({
+          status: 200,
+          data: {
+            code: 0,
+            data: {
+              sourceKind: 'form-fields',
+              fields: [
+                {
+                  name: 'amount',
+                  label: '金额',
+                  type: '自定义金额',
+                  valueType: 'Decimal',
+                },
+                {
+                  name: 'quantity',
+                  label: '数量',
+                  type: '整数数字',
+                  valueType: 'Integer',
+                },
+                { name: 'title', label: '标题', type: '单行文本', valueType: 'String' },
+                { name: 'date', label: '日期', type: '日期', valueType: 'Date' },
+                {
+                  name: 'status',
+                  label: '状态',
+                  type: '单选',
+                  valueType: 'String',
+                  options: [{ label: '通过', value: 'approved' }],
+                },
+                { name: 'manager', label: '主管', type: '员工' },
+                {
+                  name: 'metadata',
+                  label: '附加信息',
+                  type: '自定义对象',
+                  valueType: 'Json',
+                },
+              ],
+            },
+          },
+        }),
+      },
+    })
 
   assert.deepStrictEqual(
     fieldSources.conditionFieldSource.fields.map(({ name, type }) => ({ name, type })),
@@ -445,14 +472,22 @@ test('integration adapter uses returned value types for business model condition
       { name: 'quantity', type: 'number' },
       { name: 'title', type: 'text' },
       { name: 'date', type: 'date' },
-      { name: 'status', type: 'text' },
+      { name: 'status', type: 'select' },
       { name: 'metadata', type: 'text' },
     ]
   )
-  assert.deepStrictEqual(fieldSources.candidateFieldSource.fields.map((field) => field.name), ['manager'])
+  assert.deepStrictEqual(
+    fieldSources.candidateFieldSource.fields.map((field) => field.name),
+    ['manager']
+  )
   assert.strictEqual(fieldSources.formFieldSource.fields[0].type, '自定义金额')
-  assert.deepStrictEqual(fieldSources.conditionFieldSource.fields[4].options, [{ label: '通过', value: 'approved' }])
-  assert.deepStrictEqual(fieldSources.conditionFieldSource.fields[5].operators, ['equal', 'not_equal'])
+  assert.deepStrictEqual(fieldSources.conditionFieldSource.fields[4].options, [
+    { label: '通过', value: 'approved' },
+  ])
+  assert.deepStrictEqual(fieldSources.conditionFieldSource.fields[5].operators, [
+    'equal',
+    'not_equal',
+  ])
 })
 
 test('integration adapter resolves condition fields when the source api returns items payloads', async () => {
@@ -746,46 +781,47 @@ test('integration adapter allows empty flow definition formId to resolve explici
 
 test('integration adapter resolves basic info data from explicit source api', async () => {
   const fetchCalls = []
-  const basicInfoData = await ApprovalWorkflowEditorIntegrationAdapter.resolveBasicInfoData({
-    props: {
-      basicInfoDataSourceApi: {
-        method: 'get',
-        url: '/api/dev/${appName}/business-model-helper/approval-workflow-fields',
-        data: {
-          formType: '${flowDefinition.form.formType}',
-          formKey: '${flowDefinition.form.formId}',
-          definitionId: '${flowDefinition.name}',
-        },
-        cache: 3000,
-      },
-    },
-    data: {
-      appName: 'crm',
-      flowDefinition: {
-        name: 'order-approval',
-        form: {
-          formType: 'business-model',
-          formId: 'demo.order',
-        },
-      },
-    },
-    env: {
-      fetcher: async (request) => {
-        fetchCalls.push(request)
-        return {
-          status: 0,
+  const basicInfoData =
+    await ApprovalWorkflowEditorIntegrationAdapter.resolveBasicInfoData({
+      props: {
+        basicInfoDataSourceApi: {
+          method: 'get',
+          url: '/api/dev/${appName}/business-model-helper/approval-workflow-fields',
           data: {
-            boundFormSummary: '采购申请（demo.order）',
-            boundForm: {
-              formType: 'business-model',
-              formKey: 'demo.order',
-              formTitle: '采购申请',
-            },
+            formType: '${flowDefinition.form.formType}',
+            formKey: '${flowDefinition.form.formId}',
+            definitionId: '${flowDefinition.name}',
           },
-        }
+          cache: 3000,
+        },
       },
-    },
-  })
+      data: {
+        appName: 'crm',
+        flowDefinition: {
+          name: 'order-approval',
+          form: {
+            formType: 'business-model',
+            formId: 'demo.order',
+          },
+        },
+      },
+      env: {
+        fetcher: async (request) => {
+          fetchCalls.push(request)
+          return {
+            status: 0,
+            data: {
+              boundFormSummary: '采购申请（demo.order）',
+              boundForm: {
+                formType: 'business-model',
+                formKey: 'demo.order',
+                formTitle: '采购申请',
+              },
+            },
+          }
+        },
+      },
+    })
 
   assert.deepStrictEqual(fetchCalls, [
     {
@@ -810,24 +846,26 @@ test('integration adapter resolves basic info data from explicit source api', as
 })
 
 test('integration adapter keeps bridge context focused on editor core data only', () => {
-  const bridgeContext = ApprovalWorkflowEditorIntegrationAdapter.resolveCoreBridgeContext({
-    props: {
-      env: {
-        fetcher: async () => ({}),
+  const bridgeContext = ApprovalWorkflowEditorIntegrationAdapter.resolveCoreBridgeContext(
+    {
+      props: {
+        env: {
+          fetcher: async () => ({}),
+        },
       },
-    },
-    flowKey: 'order-approval',
-    readonly: false,
-    coreCapabilities: null,
-    candidateSource: {
-      revisionToken: 'candidate:1',
-      items: [{ name: 'User', label: '用户', valueKey: 'users', configMode: 'Pick' }],
-    },
-    formPermissionFieldSource: {
-      revisionToken: 'form-permission:1',
-      fields: [{ label: '金额', value: 'amount' }],
-    },
-  })
+      flowKey: 'order-approval',
+      readonly: false,
+      coreCapabilities: null,
+      candidateSource: {
+        revisionToken: 'candidate:1',
+        items: [{ name: 'User', label: '用户', valueKey: 'users', configMode: 'Pick' }],
+      },
+      formPermissionFieldSource: {
+        revisionToken: 'form-permission:1',
+        fields: [{ label: '金额', value: 'amount' }],
+      },
+    }
+  )
 
   assert.strictEqual(bridgeContext.flowKey, 'order-approval')
   assert.deepStrictEqual(bridgeContext.candidateSource, {
@@ -838,5 +876,8 @@ test('integration adapter keeps bridge context focused on editor core data only'
     revisionToken: 'form-permission:1',
     fields: [{ label: '金额', value: 'amount' }],
   })
-  assert.strictEqual(Object.prototype.hasOwnProperty.call(bridgeContext, 'formKey'), false)
+  assert.strictEqual(
+    Object.prototype.hasOwnProperty.call(bridgeContext, 'formKey'),
+    false
+  )
 })

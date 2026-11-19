@@ -53,7 +53,16 @@ const unwrapSuccessEnvelopePayload = (value) => {
   return null
 }
 
-export const unwrapFetcherResultData = (result) => {
+export const unwrapFetcherResultData = (result, { throwOnFailure = false } = {}) => {
+  if (throwOnFailure) {
+    let envelope = result
+    while (envelope && typeof envelope === 'object') {
+      if (isExplicitFailureEnvelope(envelope)) {
+        throw new Error(envelope.msg || envelope.message || '数据来源加载失败')
+      }
+      envelope = envelope.data ?? envelope.responseData
+    }
+  }
   if (result == null) {
     return null
   }
